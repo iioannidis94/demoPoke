@@ -112,7 +112,7 @@ function renderTeamSlots() {
         </div>`; 
         
         const stats = TEAM_STATS.map(st => { const nc = natureClass(slot.nature, st), ivClass = nc ? `iv${nc[0].toUpperCase() + nc.slice(1)}` : ""; return `<div class="statBox ${nc}"><label>${st}</label><div class="statInputs"><span>IV</span><span>EV</span><input class="${ivClass}" type="number" min="0" max="31" value="${slot.iv[st]}" data-slot="${i}" data-kind="iv" data-stat="${st}" placeholder="0"><input type="number" min="0" max="252" value="${slot.ev[st]}" data-slot="${i}" data-kind="ev" data-stat="${st}" placeholder="0"></div></div>` }).join(''); 
-        const moveList = (MOVES_BY_POKEMON[String(p.id)] || []).map(moveId => MOVE_DICT[moveId]);
+        const moveList = MOVES_BY_POKEMON[String(p.id)] || [];
         
         const moves = `<div class="movesGrid">${[0, 1, 2, 3].map(m => {
             const moveName = slot.moveNames[m] || '';

@@ -128,12 +128,19 @@ function parseShowdownBlock(text) {
         }
     }
 
-    // Καταχώρηση κινήσεων
+// Καταχώρηση κινήσεων
     slot.moveNames = Array.from({ length: 4 }, (_, i) => moveNames[i] || '');
     slot.moveNames.forEach((mn, i) => {
         if (!mn) return;
+        
+        // 1. Μετατρέπουμε το όνομα σε μορφή "moonblast" ή "shadow-ball"
         const key = mn.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-        const info = typeof MOVE_INFO !== 'undefined' ? (MOVE_INFO[mn] || MOVE_INFO[key] || {}) : {};
+        
+        // 2. Το ΑΠΟΘΗΚΕΥΟΥΜΕ πίσω στο slot με τη σωστή μορφή!
+        slot.moveNames[i] = key; 
+        
+        // 3. Βρίσκουμε τον τύπο και την κατηγορία (από το νέο κλειδί)
+        const info = typeof MOVE_INFO !== 'undefined' ? (MOVE_INFO[key] || {}) : {};
         slot.moves[i]    = info.type || '';
         slot.moveCats[i] = info.cat  || '';
     });

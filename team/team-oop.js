@@ -1,10 +1,18 @@
-// --- team-opp.js : Λογική Αντίπαλης Ομάδας (Assassin Mode με Base Stats Analysis) ---
+// --- team-opp.js : Λογική Αντίπαλης Ομάδας (Assassin Mode με Base Stats & Auto-Save) ---
 
-window.oppTeam = window.oppTeam || [];
-window.showOppPanel = window.showOppPanel || false; // Κρατάει την κατάσταση του Κόκκινου Κουμπιού
+// Φόρτωση από το Local Storage ή αρχικοποίηση
+window.oppTeam = JSON.parse(localStorage.getItem('tb_oppTeam')) || [];
+window.showOppPanel = JSON.parse(localStorage.getItem('tb_showOppPanel')) || false;
+
+// Βοηθητική συνάρτηση αποθήκευσης
+window.saveOpponents = function() {
+    localStorage.setItem('tb_oppTeam', JSON.stringify(window.oppTeam));
+    localStorage.setItem('tb_showOppPanel', JSON.stringify(window.showOppPanel));
+};
 
 window.toggleOppPanel = function() {
     window.showOppPanel = !window.showOppPanel;
+    window.saveOpponents();
     if(typeof renderTeamSlots === 'function') renderTeamSlots();
 };
 
@@ -24,33 +32,34 @@ window.searchAndAddOpponent = function() {
     if(window.oppTeam.length >= 6) return alert('Η αντίπαλη ομάδα είναι γεμάτη (Max 6)!');
     
     window.oppTeam.push(p.id);
+    window.saveOpponents(); // Αποθήκευση
+    
     if(document.getElementById('oppSearchInput')) document.getElementById('oppSearchInput').value = '';
     if(typeof renderTeamSlots === 'function') renderTeamSlots();
 };
 
 window.removeOpponent = function(idx) {
     window.oppTeam.splice(idx, 1);
+    window.saveOpponents(); // Αποθήκευση
     if(typeof renderTeamSlots === 'function') renderTeamSlots();
 };
 
 window.clearOpponents = function() {
     window.oppTeam = [];
+    window.saveOpponents(); // Αποθήκευση
     if(typeof renderTeamSlots === 'function') renderTeamSlots();
 };
 
-// --- Η ΝΕΑ ΜΑΓΕΙΑ: Σύγκριση Base Stats & Move Categories ---
+// Σύγκριση Base Stats & Move Categories
 window.getCombatScore = function(myCandidate, oppP) {
     let score = 0;
     
-    // Φέρνουμε τα Base Stats του Αντιπάλου
     let opBs = (typeof BASE_STATS !== 'undefined' && BASE_STATS[oppP.id]) ? BASE_STATS[oppP.id] : {hp:80, atk:80, def:80, spa:80, spd:80, spe:80};
     
-    // Υπολογίζουμε τα δικά μας περίπου Stats (Base + EVs) για να δούμε αν βαράμε πιο δυνατά Physical ή Special
     let myBs = (typeof BASE_STATS !== 'undefined' && BASE_STATS[myCandidate.p.id]) ? BASE_STATS[myCandidate.p.id] : {hp:80, atk:80, def:80, spa:80, spd:80, spe:80};
     let myAtk = myBs.atk + Math.floor((Number(myCandidate.slot.ev.ATK) || 0) / 4);
     let mySpa = myBs.spa + Math.floor((Number(myCandidate.slot.ev.SPATK) || 0) / 4);
 
-    // 1. ΑΜΥΝΤΙΚΟΣ ΕΛΕΓΧΟΣ (Αντέχω το STAB του αντίπαλου;)
     oppP.types.forEach(ot => {
         let defMult = multAtkVsTypes(ot, myCandidate.p.types);
         if (defMult > 1) score -= 80;  
@@ -58,13 +67,12 @@ window.getCombatScore = function(myCandidate, oppP) {
         if (defMult === 0) score += 100; 
     });
 
-    // 2. ΕΠΙΘΕΤΙΚΟΣ ΕΛΕΓΧΟΣ (Moves vs Opponent Base Defenses)
     let bestMoveScore = 0;
     
     (myCandidate.slot.moveNames || []).forEach(mName => {
         if (!mName) return;
         let mInfo = typeof MOVE_INFO !== 'undefined' ? MOVE_INFO[mName] : null;
-        if (!mInfo || mInfo.power === 0) return; // Αγνοούμε τα Status Moves εδώ
+        if (!mInfo || mInfo.power === 0) return; 
 
         let offMult = multAtkVsTypes(mInfo.type, oppP.types);
         let moveScore = 0;
@@ -73,15 +81,14 @@ window.getCombatScore = function(myCandidate, oppP) {
         if (offMult > 2) moveScore += 130;
         if (offMult < 1) moveScore -= 40;
 
-        // ΣΥΓΚΡΙΣΗ ΣΤΑΤΙΣΤΙΚΩΝ: Physical vs Special
         if (mInfo.cat === 'physical') {
-            if (opBs.def > 105) moveScore -= 35; // Ο Αντίπαλος είναι Physical Wall! (Πέναλτι)
-            if (opBs.def < 70) moveScore += 45;  // Ο Αντίπαλος έχει χάλια Defense! (Μπόνους)
-            if (myAtk > mySpa) moveScore += 20;  // Παίζουμε στο δυνατό μας Stat
+            if (opBs.def > 105) moveScore -= 35; 
+            if (opBs.def < 70) moveScore += 45;  
+            if (myAtk > mySpa) moveScore += 20;  
         } else if (mInfo.cat === 'special') {
-            if (opBs.spd > 105) moveScore -= 35; // Ο Αντίπαλος είναι Special Wall! (Πέναλτι)
-            if (opBs.spd < 70) moveScore += 45;  // Ο Αντίπαλος έχει χάλια Sp. Defense! (Μπόνους)
-            if (mySpa > myAtk) moveScore += 20;  // Παίζουμε στο δυνατό μας Stat
+            if (opBs.spd > 105) moveScore -= 35; 
+            if (opBs.spd < 70) moveScore += 45;  
+            if (mySpa > myAtk) moveScore += 20;  
         }
 
         if (moveScore > bestMoveScore) bestMoveScore = moveScore;
@@ -90,7 +97,7 @@ window.getCombatScore = function(myCandidate, oppP) {
     return score + bestMoveScore;
 };
 
-// UI της αναζήτησης (Με το Κόκκινο Κουμπί!)
+// UI της αναζήτησης
 window.getOpponentUI = function() {
     const optionsHtml = typeof POKE !== 'undefined' ? POKE.map(p => `<option value="${p.name.replace(/-/g, ' ')}">`).join('') : '';
 
@@ -124,7 +131,7 @@ window.getOpponentUI = function() {
     </div>`;
 };
 
-// Counters UI (Χρησιμοποιεί τον νέο έξυπνο αλγόριθμο!)
+// Counters UI
 window.getMatchupsUI = function(selected) {
     if(!window.showOppPanel || window.oppTeam.length === 0 || !selected || selected.length === 0) return '';
     
@@ -137,7 +144,7 @@ window.getMatchupsUI = function(selected) {
         let bestCounter = null; let bestScore = -9999;
 
         selected.forEach(my => {
-            let score = window.getCombatScore(my, op); // Η έξυπνη συνάρτηση!
+            let score = window.getCombatScore(my, op); 
             if(score > bestScore) { bestScore = score; bestCounter = my; }
         });
 
@@ -156,13 +163,13 @@ window.getMatchupsUI = function(selected) {
     return html + `</div></div>`;
 };
 
-// AI Engine (Χρησιμοποιεί τον νέο έξυπνο αλγόριθμο!)
+// AI Engine
 window.calcAssassinScore = function(candidate) {
     let oppScore = 0;
     let oppData = window.oppTeam.map(id => POKE.find(p => p.id === id));
 
     oppData.forEach(oppP => {
-        oppScore += window.getCombatScore(candidate, oppP); // Προσθέτει το σκορ από κάθε αντίπαλο
+        oppScore += window.getCombatScore(candidate, oppP); 
     });
     
     let validMovesCount = candidate.slot.moves.filter(m => m).length;

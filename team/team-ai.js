@@ -1,4 +1,4 @@
-// --- team-ai.js : Εξελιγμένος Αλγόριθμος AI (Competitive VGC/Singles Optimizer) ---
+// --- team-ai.js : Εξελιγμένος Αλγόριθμος AI (Custom Roster Optimizer με Move Synergy) ---
 
 function autoRecommendTeam() {
     const pool = team.map((slot, i) => ({ slot, i, p: POKE.find(x => x.id === slot.pokemonId) })).filter(x => x.slot.pokemonId);
@@ -6,7 +6,7 @@ function autoRecommendTeam() {
     if (pool.length === 0) { alert('Πρόσθεσε μερικά Pokémon στο ρόστερ σου πρώτα!'); return; }
     if (pool.length <= 6) { pool.forEach(x => x.slot.calc = true); saveTeam(); if (typeof renderTeamSlots === 'function') renderTeamSlots(); return; }
 
-    if (!confirm(`Βρέθηκαν ${pool.length} Pokémon στο ρόστερ. Το AI θα χτίσει την απόλυτη PvP εξάδα αναλύοντας Types, EVs, Items και Roles. Ξεκινάμε;`)) return;
+    if (!confirm(`Βρέθηκαν ${pool.length} Pokémon στο ρόστερ. Το AI θα αναλύσει Stats, EVs, Natures ΚΑΙ το πόσο σωστά ταιριάζουν οι επιθέσεις τους. Ξεκινάμε;`)) return;
 
     let bestTeam = [];
 
@@ -62,19 +62,42 @@ function autoRecommendTeam() {
             let cTypes = candidate.p.types;
             let details = getRoleDetails(candidate.slot, candidate.p);
 
-            // 1. ΕΤΟΙΜΟΤΗΤΑ PvP (Items, EVs, Natures) - ΤΕΡΑΣΤΙΑ ΒΑΡΥΤΗΤΑ
-            if (candidate.slot.item) score += 60; // Τα Items σώζουν ζωές
+            // 1. ΕΤΟΙΜΟΤΗΤΑ PvP (Items, EVs, Natures)
+            if (candidate.slot.item) score += 60; 
             if (candidate.slot.ability) score += 40;
             if (candidate.slot.nature) score += 30;
             
             let totalEvs = TEAM_STATS.reduce((sum, stat) => sum + (Number(candidate.slot.ev[stat]) || 0), 0);
-            if (totalEvs >= 500) score += 80; // Αν είναι fully EV trained, παίρνει τεράστιο προβάδισμα
+            if (totalEvs >= 500) score += 80; 
             else if (totalEvs > 0) score += (totalEvs / 10); 
 
-            let validMoves = candidate.slot.moves.filter(m => m);
-            score += validMoves.length * 15; 
+            // --- 2. MOVESET SYNERGY (Ο Έλεγχος Physical vs Special) ---
+            let validMovesCount = 0;
+            let nMultAtk = getNatureMultiplier(candidate.slot.nature, 'ATK');
+            let nMultSpa = getNatureMultiplier(candidate.slot.nature, 'SPATK');
 
-            // 2. ΩΜΑ ΣΤΑΤΙΣΤΙΚΑ (Tie-breaker)
+            candidate.slot.moveCats.forEach(cat => {
+                if (!cat) return;
+                validMovesCount++;
+                score += 15; // Βασικός πόντος που απλά έχεις διαλέξει κίνηση
+
+                if (cat === 'physical') {
+                    if (nMultAtk > 1) score += 30; // +30 αν το Nature βοηθάει!
+                    else if (nMultAtk < 1) score -= 40; // -40 αν το Nature καταστρέφει το Attack!
+                    
+                    if (details.rAtk >= details.rSpa) score += 15; // Το stat είναι όντως ψηλό
+                    else score -= 25; // Έχει Physical κίνηση αλλά το Special stat του είναι πιο ψηλό!
+                } 
+                else if (cat === 'special') {
+                    if (nMultSpa > 1) score += 30; 
+                    else if (nMultSpa < 1) score -= 40; 
+                    
+                    if (details.rSpa >= details.rAtk) score += 15; 
+                    else score -= 25; 
+                }
+            });
+
+            // 3. ΩΜΑ ΣΤΑΤΙΣΤΙΚΑ (Tie-breaker)
             score += (details.bstReal / 10);
 
             if (bestTeam.length === 0) {
@@ -82,7 +105,7 @@ function autoRecommendTeam() {
                 return; 
             }
 
-            // 3. ΑΜΥΝΤΙΚΗ ΣΥΝΟΧΗ (Synergy - Ο Βασιλιάς του PvP)
+            // 4. ΑΜΥΝΤΙΚΗ ΣΥΝΟΧΗ (Synergy)
             let teamWeaknesses = {};
             AT.forEach(t => teamWeaknesses[t] = 0);
             bestTeam.forEach(member => {
@@ -96,10 +119,9 @@ function autoRecommendTeam() {
             AT.forEach(t => {
                 let cMult = multAtkVsTypes(t, cTypes);
                 if (teamWeaknesses[t] >= 2) { 
-                    // Αν η ομάδα πονάει πολύ σε ένα type (π.χ. 2+ weak)
-                    if (cMult <= 0.5 && cMult > 0) score += 120; // Σωτήριο Resist
-                    if (cMult === 0) score += 200; // Απόλυτο Immunity (Θεϊκή προσθήκη)
-                    if (cMult >= 2) score -= 150; // Μη βάλεις 3ο αδύναμο Pokémon!
+                    if (cMult <= 0.5 && cMult > 0) score += 120; 
+                    if (cMult === 0) score += 200; 
+                    if (cMult >= 2) score -= 150; 
                 } else if (teamWeaknesses[t] === 1) {
                     if (cMult <= 0.5 && cMult > 0) score += 60; 
                     if (cMult === 0) score += 100; 
@@ -107,13 +129,13 @@ function autoRecommendTeam() {
                 }
             });
 
-            // 4. ΕΠΙΘΕΤΙΚΗ ΚΑΛΥΨΗ
+            // 5. ΕΠΙΘΕΤΙΚΗ ΚΑΛΥΨΗ
             let teamMoveTypes = new Set(bestTeam.flatMap(m => m.slot.moves).filter(x => x));
-            validMoves.forEach(mt => {
-                if (!teamMoveTypes.has(mt)) score += 30; // Δίνει κάλυψη που δεν είχαμε
+            candidate.slot.moves.filter(m => m).forEach(mt => {
+                if (!teamMoveTypes.has(mt)) score += 30; 
             });
 
-            // 5. ΙΣΟΡΡΟΠΙΑ ΡΟΛΩΝ
+            // 6. ΙΣΟΡΡΟΠΙΑ ΡΟΛΩΝ
             let teamRoles = bestTeam.map(m => getRoleDetails(m.slot, m.p).role);
             let tanks = teamRoles.filter(r => r === 'tank').length;
             let phys = teamRoles.filter(r => r === 'physical').length;
@@ -125,9 +147,9 @@ function autoRecommendTeam() {
             
             if (details.role === 'physical' && phys >= 2) score -= 60; 
             if (details.role === 'special' && spec >= 2) score -= 60;  
-            if (details.role === 'tank' && tanks >= 3) score -= 80; // Ποτέ πάνω από 2-3 tanks
+            if (details.role === 'tank' && tanks >= 3) score -= 80; 
 
-            console.log(`[Score: ${Math.floor(score)}] ${candidate.p.name} | Role: ${details.role} | Evs: ${totalEvs}`);
+            console.log(`[Score: ${Math.floor(score)}] ${candidate.p.name} | Role: ${details.role} | Valid Moves: ${validMovesCount}`);
 
             if (score > bestScore) { bestScore = score; bestCandidate = candidate; }
         });
@@ -146,5 +168,5 @@ function autoRecommendTeam() {
     saveTeam(); 
     if (typeof renderTeamSlots === 'function') renderTeamSlots();
     
-    alert('🏆 Ομάδα έτοιμη! Ο αλγόριθμος τιμώρησε τα ημιτελή builds, προστάτευσε την ομάδα από κοινές αδυναμίες (immunities) και διάλεξε τα καλύτερα fully EV trained Pokémon σου.');
+    alert('🏆 Ομάδα έτοιμη! Ο αλγόριθμος ανέλυσε πλήρως τα Movesets, τιμωρώντας τα λάθος Natures και προωθώντας τα τέλεια synergy builds.');
 }

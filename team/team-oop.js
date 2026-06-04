@@ -5,10 +5,26 @@ window.oppTeam = window.oppTeam || [];
 window.searchAndAddOpponent = function() {
     const input = document.getElementById('oppSearchInput').value.toLowerCase().trim();
     if(!input) return;
-    const p = POKE.find(x => x.name.toLowerCase().includes(input) || x.id.toString() === input);
+
+    // Καθαρίζουμε το input για να βρίσκει τα Pokémon ακόμα κι αν έχουν κενά αντί για παύλες (π.χ. "mr mime")
+    const normalizedInput = input.replace(/\s+/g, '-');
+
+    // Ψάχνει το Pokémon. Πρώτα ελέγχει για ακριβές όνομα (π.χ. από το datalist), μετά για ID, και μετά για partial match
+    const p = POKE.find(x => 
+        x.name.toLowerCase() === normalizedInput || 
+        x.name.toLowerCase().replace(/-/g, ' ') === input ||
+        x.id.toString() === input ||
+        x.name.toLowerCase().includes(normalizedInput)
+    );
+
     if(!p) return alert('Το Pokémon δεν βρέθηκε! Δοκίμασε στα Αγγλικά (π.χ. charizard) ή το ID του.');
     if(window.oppTeam.length >= 6) return alert('Η αντίπαλη ομάδα είναι γεμάτη (Max 6)!');
+    
     window.oppTeam.push(p.id);
+    
+    // Καθαρίζουμε το πεδίο μόλις προστεθεί για να είναι έτοιμο για το επόμενο!
+    if(document.getElementById('oppSearchInput')) document.getElementById('oppSearchInput').value = '';
+
     if(typeof renderTeamSlots === 'function') renderTeamSlots();
 };
 
@@ -24,14 +40,23 @@ window.clearOpponents = function() {
 
 // Φτιάχνει το UI της αναζήτησης
 window.getOpponentUI = function() {
+    // Δημιουργούμε το HTML για το Datalist (τα recommendations)
+    const optionsHtml = typeof POKE !== 'undefined' ? POKE.map(p => `<option value="${p.name.replace(/-/g, ' ')}">`).join('') : '';
+
     return `
     <div class="opp-panel" style="margin-top:25px; padding:15px; background:rgba(255, 77, 79, 0.05); border:1px solid #ff4d4f; border-radius:8px;">
+        <!-- Το Datalist κρύβεται στο παρασκήνιο και "ταΐζει" το input -->
+        <datalist id="oppPokeList">
+            ${optionsHtml}
+        </datalist>
+        
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
             <strong style="color:#ff4d4f; font-size:15px;">🎯 VS Αντίπαλη Ομάδα (Target Mode)</strong>
             <button onclick="clearOpponents()" style="background:#ff4d4f; color:white; border:none; padding:4px 8px; border-radius:4px; cursor:pointer; font-size:11px;">Καθαρισμός</button>
         </div>
         <div style="display:flex; gap:10px; margin-bottom:15px;">
-            <input type="text" id="oppSearchInput" placeholder="Π.χ. garchomp ή 445" style="flex:1; padding:8px; border-radius:4px; border:1px solid var(--brd); background:var(--bg); color:var(--txt);">
+            <!-- Προστέθηκε το list="oppPokeList" και το onkeydown για το Enter -->
+            <input type="text" id="oppSearchInput" list="oppPokeList" onkeydown="if(event.key === 'Enter') searchAndAddOpponent()" placeholder="Π.χ. garchomp ή 445" style="flex:1; padding:8px; border-radius:4px; border:1px solid var(--brd); background:var(--bg); color:var(--txt);">
             <button onclick="searchAndAddOpponent()" style="padding:8px 15px; cursor:pointer; background:#4dabf7; color:white; border:none; border-radius:4px; font-weight:bold;">Προσθήκη</button>
         </div>
         <div style="display:flex; flex-wrap:wrap; gap:10px; min-height:45px;">

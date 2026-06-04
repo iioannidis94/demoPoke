@@ -44,15 +44,17 @@ function toggleCalc(i) { if (!team[i].pokemonId) return; if (!team[i].calc && ca
 function calcPanel() { 
     const selected = calcTeam(); 
     
-    // Ασφαλής κλήση των UI Αντιπάλου, ώστε να υπάρχουν ΠΑΝΤΑ (ακόμα και στο Empty State)
+    // Ασφαλής κλήση των UI Αντιπάλου
     const oppUI = window.getOpponentUI ? window.getOpponentUI() : '';
     const matchupsUI = window.getMatchupsUI ? window.getMatchupsUI(selected) : '';
 
+    // --- EMPTY STATE (Όταν δεν έχεις διαλέξει κανένα Pokemon για Calculate) ---
     if (!selected.length) { 
-        return `<div class="calcPanel">
+        return `<div class="calcPanel" style="height: auto !important; min-height: max-content !important; overflow: visible !important; padding-bottom: 20px;">
             <div class="calcHead"><strong>Battle Calculate</strong><span>0/6 selected</span></div>
-            <div class="calcEmpty">Use "Add to calculate" on up to 6 Pokémon from your slots.</div>
+            <!-- Βάζουμε το Κόκκινο Κουμπί ψηλά για να μην κρύβεται ποτέ! -->
             ${oppUI}
+            <div class="calcEmpty" style="margin-top: 15px;">Use "Add to calculate" on up to 6 Pokémon from your slots.</div>
         </div>`; 
     } 
     
@@ -103,9 +105,14 @@ function calcPanel() {
         `).join('')}
     </div>`;
 
-    return `<div class="calcPanel">
+    // --- FILLED STATE (Όταν έχεις επιλεγμένα Pokemon) ---
+    return `<div class="calcPanel" style="height: auto !important; min-height: max-content !important; overflow: visible !important; padding-bottom: 20px;">
         <div class="calcHead"><strong>Battle Calculate</strong><span>${selected.length}/6 selected</span></div>
-        <div class="calcScores">
+        
+        <!-- Το Κόκκινο Κουμπί μπήκε ΠΑΝΩ από τα σκορ για να φαίνεται πρώτο-πρώτο! -->
+        ${oppUI}
+
+        <div class="calcScores" style="margin-top: 15px;">
             <div><span>Offense</span><strong>${offenseScore}/18</strong></div>
             <div><span>Defense</span><strong>${defenseScore}/18</strong></div>
             <div><span>Physical</span><strong>${physicalCount}</strong></div>
@@ -118,7 +125,6 @@ function calcPanel() {
             <div><b>Attack struggles</b><div class="calcBadges">${moveTypes.length ? chips(struggle) : '<span class="calcNone">Choose damaging move types first.</span>'}</div></div>
             <div><b>Defensive threats</b><div class="calcBadges">${threatHtml}</div></div>
         </div>
-        ${oppUI}
         ${matchupsUI}
     </div>`;
 }

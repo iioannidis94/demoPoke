@@ -82,8 +82,33 @@ function calcPanel() {
     const chips = list => list.length ? list.map(x => tb(x.t || x, 'calcBadge')).join('') : '<span class="calcNone">none</span>'; 
     const threatHtml = threats.length ? threats.slice(0, 10).map(x => `<span class="calcThreat" style="border-color:${TC[x.t] || '#888'}"><span style="background:${TC[x.t] || '#888'}">${x.t}</span>${x.count} weak${x.max >= 4 ? ` · x${x.max}` : ''}</span>`).join('') : '<span class="calcNone">No obvious type weaknesses.</span>'; 
     
-    return `<div class="calcPanel"><div class="calcHead"><strong>Battle Calculate</strong><span>${selected.length}/6 selected</span></div><div class="calcScores"><div><span>Offense</span><strong>${offenseScore}/18</strong></div><div><span>Defense</span><strong>${defenseScore}/18</strong></div><div><span>Physical</span><strong>${physicalCount}</strong></div><div><span>Special</span><strong>${specialCount}</strong></div></div><div class="calcNotes">${notes.length ? notes.map(n => `<p>${n}</p>`).join('') : '<p>Choose move types first to score offense.</p>'}</div><div class="calcSelected">${selected.map(x => `<span>#${String(x.p.id).padStart(4, '0')} ${x.p.name.replace(/-/g, ' ')}</span>`).join('')}</div><div class="calcRows"><div><b>Attack advantage</b><div class="calcBadges">${moveTypes.length ? chips(strong) : '<span class="calcNone">Choose damaging move types first.</span>'}</div></div><div><b>Attack struggles</b><div class="calcBadges">${moveTypes.length ? chips(struggle) : '<span class="calcNone">Choose damaging move types first.</span>'}</div></div><div><b>Defensive threats</b><div class="calcBadges">${threatHtml}</div></div></div></div>`;
-} 
+    // ΕΔΩ ΕΓΙΝΕ Η ΑΛΛΑΓΗ: Προστέθηκε το spriteImg(x.p) και ωραίο CSS styling (flexbox, borders)
+    const selectedHtml = `<div class="calcSelected" style="display:flex; flex-wrap:wrap; justify-content:center; gap:12px; margin: 15px 0;">
+        ${selected.map(x => `
+            <div style="display:flex; flex-direction:column; align-items:center; background:var(--bg); border:1px solid var(--brd); border-radius:8px; padding:8px; min-width:70px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                ${spriteImg(x.p)}
+                <span style="font-size:11px; font-weight:bold; margin-top:6px; color:var(--txt); text-align:center;">${x.p.name.replace(/-/g, ' ')}</span>
+            </div>
+        `).join('')}
+    </div>`;
+
+    return `<div class="calcPanel">
+        <div class="calcHead"><strong>Battle Calculate</strong><span>${selected.length}/6 selected</span></div>
+        <div class="calcScores">
+            <div><span>Offense</span><strong>${offenseScore}/18</strong></div>
+            <div><span>Defense</span><strong>${defenseScore}/18</strong></div>
+            <div><span>Physical</span><strong>${physicalCount}</strong></div>
+            <div><span>Special</span><strong>${specialCount}</strong></div>
+        </div>
+        <div class="calcNotes">${notes.length ? notes.map(n => `<p>${n}</p>`).join('') : '<p>Choose move types first to score offense.</p>'}</div>
+        ${selectedHtml}
+        <div class="calcRows">
+            <div><b>Attack advantage</b><div class="calcBadges">${moveTypes.length ? chips(strong) : '<span class="calcNone">Choose damaging move types first.</span>'}</div></div>
+            <div><b>Attack struggles</b><div class="calcBadges">${moveTypes.length ? chips(struggle) : '<span class="calcNone">Choose damaging move types first.</span>'}</div></div>
+            <div><b>Defensive threats</b><div class="calcBadges">${threatHtml}</div></div>
+        </div>
+    </div>`;
+}
 
 function renderTeamList() { 
     const el = document.getElementById('teamList'), q = teamQuery.toLowerCase().trim(); 

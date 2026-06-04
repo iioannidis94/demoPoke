@@ -100,13 +100,16 @@ function calcPanel() {
             <div><span>Physical</span><strong>${physicalCount}</strong></div>
             <div><span>Special</span><strong>${specialCount}</strong></div>
         </div>
-        <div class="calcNotes">${notes.length ? notes.map(n => `<p>${n}</p>`).join('') : '<p>Choose move types first to score offense.</p>'}</div>
         ${selectedHtml}
         <div class="calcRows">
             <div><b>Attack advantage</b><div class="calcBadges">${moveTypes.length ? chips(strong) : '<span class="calcNone">Choose damaging move types first.</span>'}</div></div>
-            <div><b>Attack struggles</b><div class="calcBadges">${moveTypes.length ? chips(struggle) : '<span class="calcNone">Choose damaging move types first.</span>'}</div></div>
             <div><b>Defensive threats</b><div class="calcBadges">${threatHtml}</div></div>
         </div>
+        
+        <!-- ΕΔΩ ΜΠΑΙΝΟΥΝ ΤΑ ΝΕΑ ΠΑΝΕΛ ΑΠΟ ΤΟ team-opp.js! -->
+        ${window.getOpponentUI ? window.getOpponentUI() : ''}
+        ${window.getMatchupsUI ? window.getMatchupsUI(selected) : ''}
+        
     </div>`;
 }
 

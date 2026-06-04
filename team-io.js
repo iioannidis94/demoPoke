@@ -128,7 +128,7 @@ function parseShowdownBlock(text) {
         }
     }
 
-// Καταχώρηση κινήσεων
+    // Καταχώρηση κινήσεων
     slot.moveNames = Array.from({ length: 4 }, (_, i) => moveNames[i] || '');
     slot.moveNames.forEach((mn, i) => {
         if (!mn) return;

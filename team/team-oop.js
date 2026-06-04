@@ -175,4 +175,13 @@ window.calcAssassinScore = function(candidate) {
     let validMovesCount = candidate.slot.moves.filter(m => m).length;
     if (validMovesCount < 4) oppScore -= (4 - validMovesCount) * 20;
     return oppScore;
+// --- Αναγκαστική εμφάνιση του UI κατά την πρώτη φόρτωση της σελίδας ---
+setTimeout(() => {
+    if (typeof renderTeamSlots === 'function') renderTeamSlots();
+}, 50);
+
+
 };
+
+
+

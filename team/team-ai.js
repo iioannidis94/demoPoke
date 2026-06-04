@@ -1,20 +1,45 @@
-
-// --- team-ai.js : Εξελιγμένος Αλγόριθμος AI ---
+// --- team-ai.js : Εξελιγμένος Αλγόριθμος AI (Custom Roster Optimizer) ---
 
 function autoRecommendTeam() {
+    // 1. Παίρνουμε ΜΟΝΟ τα Pokémon που έχεις βάλει εσύ στα Slots
     const pool = team.map((slot, i) => ({ slot, i, p: POKE.find(x => x.id === slot.pokemonId) })).filter(x => x.slot.pokemonId);
-    if (pool.length === 0) { alert('Πρόσθεσε μερικά Pokémon στο ρόστερ (Slot) πρώτα!'); return; }
-    if (pool.length <= 6) { pool.forEach(x => x.slot.calc = true); saveTeam(); renderTeamSlots(); return; }
+    
+    if (pool.length === 0) { 
+        alert('Πρόσθεσε μερικά Pokémon στο ρόστερ σου πρώτα!'); 
+        return; 
+    }
+    
+    // Αν έχεις βάλει 6 ή λιγότερα, δεν έχει νόημα η επιλογή, τα παίρνει όλα.
+    if (pool.length <= 6) { 
+        pool.forEach(x => x.slot.calc = true); 
+        saveTeam(); 
+        if (typeof renderTeamSlots === 'function') renderTeamSlots(); 
+        return; 
+    }
 
-    team.forEach(s => s.calc = false);
+    if (!confirm(`Βρέθηκαν ${pool.length} Pokémon στο ρόστερ. Το AI θα αναλύσει Stats, EVs, IVs, Natures και Types για να διαλέξει την καλύτερη 6άδα και θα τη μετακινήσει στην κορυφή. Προχωράμε;`)) return;
+
     let bestTeam = [];
 
-    const getRealStat = (base, iv, ev, level, isHP, natureMult) => {
-        base = base || 80; 
-        iv = (iv === '' || iv === undefined) ? 31 : parseInt(iv); 
-        ev = (ev === '' || ev === undefined) ? 0 : parseInt(ev);
-        level = parseInt(level) || 100;
+    // --- 2. Υπολογισμός Πραγματικών Στατιστικών (Pokémon Math Formula) ---
+    const getNatureMultiplier = (nature, statName) => {
+        if (!nature) return 1;
+        const n = nature.toLowerCase();
+        const buffs = { adamant: 'ATK', bold: 'DEF', impish: 'DEF', timid: 'SPD', jolly: 'SPD', modest: 'SPATK', mild: 'SPATK', quiet: 'SPATK', calm: 'SPDEF', careful: 'SPDEF', sassy: 'SPDEF', brave: 'ATK', naughty: 'ATK', rash: 'SPATK', lax: 'DEF', naive: 'SPD', hasty: 'SPD' };
+        const nerfs = { adamant: 'SPATK', bold: 'ATK', impish: 'SPATK', timid: 'ATK', jolly: 'SPATK', modest: 'ATK', mild: 'DEF', quiet: 'SPD', calm: 'ATK', careful: 'SPATK', sassy: 'SPD', brave: 'SPD', naughty: 'SPDEF', rash: 'SPDEF', lax: 'SPDEF', naive: 'SPDEF', hasty: 'DEF' };
+        
+        if (buffs[n] === statName) return 1.1;
+        if (nerfs[n] === statName) return 0.9;
+        return 1;
+    };
 
+    const getRealStat = (base, iv, ev, level, isHP, natureMult) => {
+        base = Number(base) || 80; 
+        iv = (iv === '' || iv === undefined) ? 31 : Number(iv); 
+        ev = (ev === '' || ev === undefined) ? 0 : Number(ev);
+        level = Number(level) || 100;
+
+        // Ο αυθεντικός μαθηματικός τύπος των Pokémon games!
         if (isHP) {
             return Math.floor(((2 * base + iv + Math.floor(ev / 4)) * level) / 100) + level + 10;
         } else {
@@ -23,15 +48,7 @@ function autoRecommendTeam() {
         }
     };
 
-    const getNatureMultiplier = (nature, statName) => {
-        if (!nature) return 1;
-        const effects = TEAM_NATURE_EFFECTS[nature];
-        if (!effects) return 1;
-        if (effects[0] === statName) return 1.1; 
-        if (effects[1] === statName) return 0.9; 
-        return 1;
-    };
-
+    // --- 3. Καθορισμός Ρόλου με βάση τα ΤΕΛΙΚΑ Stats του χρήστη ---
     const getRoleDetails = (slot, p) => {
         let bs = (typeof BASE_STATS !== 'undefined' && BASE_STATS[p.id]) ? BASE_STATS[p.id] : {hp:80, atk:80, def:80, spa:80, spd:80, spe:80};
         
@@ -53,6 +70,7 @@ function autoRecommendTeam() {
         return { role, bstReal, rAtk, rSpa, bulk };
     };
 
+    // --- 4. Αλγόριθμος Επιλογής της Καλύτερης 6άδας ---
     while (bestTeam.length < 6 && bestTeam.length < pool.length) {
         let bestScore = -Infinity, bestCandidate = null;
 
@@ -61,44 +79,47 @@ function autoRecommendTeam() {
             let cTypes = candidate.p.types;
             let details = getRoleDetails(candidate.slot, candidate.p);
 
-            score += (details.bstReal / 40); 
+            // Βαθμολογία με βάση το πόσο δυνατό είναι το build σου (Stats + IVs + EVs)
+            score += (details.bstReal / 20); 
 
+            // Μπόνους αν του έχεις δώσει αντικείμενο, ability και κινήσεις
             if (candidate.slot.item) score += 15;
             if (candidate.slot.ability) score += 10;
-            if (candidate.slot.nature) score += 5;
-            
             let validMoves = candidate.slot.moves.filter(m => m);
             score += validMoves.length * 10; 
 
             if (bestTeam.length === 0) {
                 if (score > bestScore) { bestScore = score; bestCandidate = candidate; }
-                return;
+                return; // Για το πρώτο Pokémon διαλέγουμε απλά το πιο δυνατό
             }
 
+            // --- Αμυντική Κάλυψη (Defensive Synergy) ---
             let teamWeaknesses = {};
             AT.forEach(t => teamWeaknesses[t] = 0);
             bestTeam.forEach(member => {
                 AT.forEach(t => {
                     let mult = multAtkVsTypes(t, member.p.types);
-                    if (mult > 1) teamWeaknesses[t] += 1;
-                    if (mult < 1) teamWeaknesses[t] -= 1;
+                    if (mult > 1) teamWeaknesses[t] += 1; // Η ομάδα πονάει εδώ
+                    if (mult < 1) teamWeaknesses[t] -= 1; // Η ομάδα αντέχει εδώ
                 });
             });
 
             AT.forEach(t => {
                 let cMult = multAtkVsTypes(t, cTypes);
                 if (teamWeaknesses[t] > 0) { 
-                    if (cMult < 1) score += 45; 
-                    if (cMult === 0) score += 75; 
-                    if (cMult > 1) score -= 60; 
+                    if (cMult < 1) score += 50; // Καλύπτει την αδυναμία της ομάδας!
+                    if (cMult === 0) score += 80; // Έχει ανοσία (Immune)! Τέλεια επιλογή.
+                    if (cMult > 1) score -= 60; // Κακή επιλογή, προσθέτει στην ίδια αδυναμία.
                 }
             });
 
+            // --- Επιθετική Κάλυψη (Offensive Coverage) ---
             let teamMoveTypes = new Set(bestTeam.flatMap(m => m.slot.moves).filter(x => x));
             validMoves.forEach(mt => {
-                if (!teamMoveTypes.has(mt)) score += 25; 
+                if (!teamMoveTypes.has(mt)) score += 20; // Φέρνει νέο τύπο επίθεσης στην ομάδα
             });
 
+            // --- Ισορροπία Ρόλων ---
             let teamRoles = bestTeam.map(m => getRoleDetails(m.slot, m.p).role);
             let tanks = teamRoles.filter(r => r === 'tank').length;
             let phys = teamRoles.filter(r => r === 'physical').length;
@@ -108,17 +129,41 @@ function autoRecommendTeam() {
             if (details.role === 'physical' && phys < 2) score += 35; 
             if (details.role === 'special' && spec < 2) score += 35; 
             
-            if (details.role === 'physical' && phys >= 3) score -= 45; 
-            if (details.role === 'special' && spec >= 3) score -= 45;  
-            if (details.role === 'tank' && tanks >= 3) score -= 40; 
+            if (details.role === 'physical' && phys >= 2) score -= 45; // Όχι πάρα πολλοί ίδιοι
+            if (details.role === 'special' && spec >= 2) score -= 45;  
+            if (details.role === 'tank' && tanks >= 3) score -= 50; // Max 2-3 tanks
 
             if (score > bestScore) { bestScore = score; bestCandidate = candidate; }
         });
+        
         bestTeam.push(bestCandidate);
     }
 
-    bestTeam.forEach(x => team[x.i].calc = true);
+    // --- 5. Αναδιάταξη: Βάζουμε τους 6 νικητές στα πρώτα 6 Slots ---
+    let newTeamArray = [];
+    
+    // Προσθέτουμε πρώτα τους 6 εκλεκτούς (και τους βάζουμε calc = true)
+    bestTeam.forEach(x => {
+        x.slot.calc = true;
+        newTeamArray.push(x.slot);
+    });
+
+    // Προσθέτουμε τους υπόλοιπους του pool από κάτω (calc = false)
+    pool.filter(x => !bestTeam.includes(x)).forEach(x => {
+        x.slot.calc = false;
+        newTeamArray.push(x.slot);
+    });
+
+    // Γεμίζουμε τα υπόλοιπα κενά slots για να μείνει το μέγεθος (π.χ. 50) σταθερό
+    while (newTeamArray.length < team.length) {
+        newTeamArray.push(EMPTY_SLOT());
+    }
+
+    // Αντικαθιστούμε την παλιά ομάδα με τη νέα ταξινομημένη
+    team.splice(0, team.length, ...newTeamArray);
+
     saveTeam(); 
     if (typeof renderTeamSlots === 'function') renderTeamSlots();
-    alert('✨ Η Τεχνητή Νοημοσύνη (AI) ανέλυσε τα Levels, EVs/IVs, Movesets και Type Synergies και επέλεξε την ιδανική 6άδα!');
+    
+    alert('✨ Ανάλυση ολοκληρώθηκε! Η Τεχνητή Νοημοσύνη (AI) ανέλυσε τα Base Stats, τα EVs, τα IVs, τα Natures και το Synergy του ρόστερ σου. Η Ιδανική 6άδα μετακινήθηκε στην κορυφή!');
 }

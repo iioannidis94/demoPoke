@@ -122,6 +122,19 @@ function renderTeamSlots() {
             const typeHtml = moveType ? tb(moveType) : '<span class="cat-badge cat-empty">Type</span>';
             const catHtml = moveCat && moveCategories[moveCat] ? moveCategories[moveCat] : '<span class="cat-badge cat-empty">Cat</span>';
 
+            // --- ΝΕΟΣ ΚΩΔΙΚΑΣ: Υπολογισμός Power & Accuracy ---
+            let statsHtml = '';
+            if (moveName && typeof MOVE_INFO !== 'undefined' && MOVE_INFO[moveName]) {
+                const power = MOVE_INFO[moveName].power;
+                const acc = MOVE_INFO[moveName].acc;
+                
+                const displayPwr = power === 0 ? '-' : power;
+                const displayAcc = (acc === 0 || acc === null) ? '-' : acc;
+                
+                // Το margin-left:auto θα το σπρώξει όμορφα στα δεξιά του κουτιού
+                statsHtml = `<span style="margin-left:auto; font-size:11px; opacity:0.8; font-family:monospace; color:var(--txt);">Pwr: <b>${displayPwr}</b> | Acc: <b>${displayAcc}</b></span>`;
+            }
+
             return `<div class="movePair">
                 <label>Move ${m + 1}
                     <select data-slot="${i}" data-move-name="${m}">
@@ -129,9 +142,10 @@ function renderTeamSlots() {
                         ${moveList.map(name => `<option value="${name}" ${moveName === name ? 'selected' : ''}>${name.replace(/-/g, ' ')}</option>`).join('')}
                     </select>
                 </label>
-                <div class="moveInfo">
+                <div class="moveInfo" style="display:flex; align-items:center; gap:6px;">
                     ${typeHtml}
                     ${catHtml}
+                    ${statsHtml}
                 </div>
             </div>`;
         }).join('')}</div>`; 

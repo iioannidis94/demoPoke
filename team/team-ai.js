@@ -1,4 +1,4 @@
-// --- team-ai.js : Εξελιγμένος Αλγόριθμος AI (Competitive VGC/Singles Optimizer με Move Intelligence) ---
+// --- team-ai.js : Εξελιγμένος Αλγόριθμος AI (Competitive VGC/Singles Optimizer με Move Intelligence & Assassin Mode) ---
 
 function autoRecommendTeam() {
     const pool = team.map((slot, i) => ({ slot, i, p: POKE.find(x => x.id === slot.pokemonId) })).filter(x => x.slot.pokemonId);
@@ -6,7 +6,7 @@ function autoRecommendTeam() {
     if (pool.length === 0) { alert('Πρόσθεσε μερικά Pokémon στο ρόστερ σου πρώτα!'); return; }
     if (pool.length <= 6) { pool.forEach(x => x.slot.calc = true); saveTeam(); if (typeof renderTeamSlots === 'function') renderTeamSlots(); return; }
 
-    if (!confirm(`Βρέθηκαν ${pool.length} Pokémon στο ρόστερ. Το AI θα αναλύσει Stats, EVs, και τη ΔΥΝΑΜΗ/ΑΚΡΙΒΕΙΑ των επιθέσεων (Base Power, STAB, Accuracy). Ξεκινάμε;`)) return;
+    if (!confirm(`Βρέθηκαν ${pool.length} Pokémon στο ρόστερ. Το AI θα αναλύσει Stats, EVs, Επιθέσεις και θα προσαρμοστεί στους αντιπάλους (αν υπάρχουν). Ξεκινάμε;`)) return;
 
     let bestTeam = [];
 
@@ -71,56 +71,43 @@ function autoRecommendTeam() {
             if (totalEvs >= 500) score += 80; 
             else if (totalEvs > 0) score += (totalEvs / 10); 
 
-            // --- 2. MOVE INTELLIGENCE (Power, Accuracy, STAB, Category) ---
+            // 2. MOVE INTELLIGENCE
             let validMovesCount = 0;
             let nMultAtk = getNatureMultiplier(candidate.slot.nature, 'ATK');
             let nMultSpa = getNatureMultiplier(candidate.slot.nature, 'SPATK');
 
-            // Κοιτάμε τα ονόματα των επιθέσεων για να τραβήξουμε τα data
             (candidate.slot.moveNames || []).forEach(moveId => {
                 if (!moveId) return;
                 let moveData = (typeof MOVE_INFO !== 'undefined') ? MOVE_INFO[moveId] : null;
                 if (!moveData) return;
 
                 validMovesCount++;
-                score += 15; // Βασικός πόντος απλά επειδή το slot της επίθεσης δεν είναι άδειο
+                score += 15; 
 
-                // A. STAB Bonus (Τεράστια σημασία)
-                if (cTypes.includes(moveData.type)) {
-                    score += 35; // Επιβράβευση για STAB!
-                }
+                if (cTypes.includes(moveData.type)) score += 35; 
 
-                // B. Ανάλυση Κατηγορίας (Physical/Special/Status) και Ζημιάς (Power/Accuracy)
                 if (moveData.cat === 'status') {
-                    score += 25; // Τα Status moves είναι άριστα εργαλεία
+                    score += 25; 
                 } else {
-                    // Είναι επίθεση που κάνει ζημιά
                     if (moveData.cat === 'physical') {
                         if (nMultAtk > 1) score += 25; 
                         else if (nMultAtk < 1) score -= 40; 
-                        
-                        if (details.rAtk >= details.rSpa) score += 20; 
-                        else score -= 30; 
+                        if (details.rAtk >= details.rSpa) score += 20; else score -= 30; 
                     } else if (moveData.cat === 'special') {
                         if (nMultSpa > 1) score += 25; 
                         else if (nMultSpa < 1) score -= 40; 
-                        
-                        if (details.rSpa >= details.rAtk) score += 20; 
-                        else score -= 30; 
+                        if (details.rSpa >= details.rAtk) score += 20; else score -= 30; 
                     }
+                    if (moveData.power >= 90) score += 25; 
+                    else if (moveData.power >= 70) score += 10; 
+                    else if (moveData.power > 0 && moveData.power < 50) score -= 20; 
 
-                    // Αξιολόγηση Base Power
-                    if (moveData.power >= 90) score += 25; // Πανίσχυρη επίθεση!
-                    else if (moveData.power >= 70) score += 10; // Καλή επίθεση
-                    else if (moveData.power > 0 && moveData.power < 50) score -= 20; // Αδύναμη επίθεση, δεν αξίζει στο PvP
-
-                    // Αξιολόγηση Accuracy
-                    if (moveData.acc < 100 && moveData.acc >= 85) score -= 10; // Μικρό ρίσκο
-                    else if (moveData.acc < 85) score -= 25; // Μεγάλο ρίσκο να αστοχήσει
+                    if (moveData.acc < 100 && moveData.acc >= 85) score -= 10; 
+                    else if (moveData.acc < 85) score -= 25; 
                 }
             });
 
-            // 3. ΩΜΑ ΣΤΑΤΙΣΤΙΚΑ (Tie-breaker)
+            // 3. ΩΜΑ ΣΤΑΤΙΣΤΙΚΑ
             score += (details.bstReal / 10);
 
             if (bestTeam.length === 0) {
@@ -128,34 +115,40 @@ function autoRecommendTeam() {
                 return; 
             }
 
-            // 4. ΑΜΥΝΤΙΚΗ ΣΥΝΟΧΗ (Synergy)
-            let teamWeaknesses = {};
-            AT.forEach(t => teamWeaknesses[t] = 0);
-            bestTeam.forEach(member => {
-                AT.forEach(t => {
-                    let mult = multAtkVsTypes(t, member.p.types);
-                    if (mult >= 2) teamWeaknesses[t] += 1; 
-                    if (mult <= 0.5) teamWeaknesses[t] -= 1; 
+            // 4. ΑΜΥΝΤΙΚΗ ΣΥΝΟΧΗ & ASSASSIN MODE
+            if (window.oppTeam && window.oppTeam.length > 0 && window.calcAssassinScore) {
+                // ASSASSIN MODE: Το AI καλεί τη συνάρτηση από το team-opp.js
+                score += window.calcAssassinScore(candidate);
+            } else {
+                // NORMAL MODE: Το κλασικό Synergy που είχαμε ήδη
+                let teamWeaknesses = {};
+                AT.forEach(t => teamWeaknesses[t] = 0);
+                bestTeam.forEach(member => {
+                    AT.forEach(t => {
+                        let mult = multAtkVsTypes(t, member.p.types);
+                        if (mult >= 2) teamWeaknesses[t] += 1; 
+                        if (mult <= 0.5) teamWeaknesses[t] -= 1; 
+                    });
                 });
-            });
 
-            AT.forEach(t => {
-                let cMult = multAtkVsTypes(t, cTypes);
-                if (teamWeaknesses[t] >= 2) { 
-                    if (cMult <= 0.5 && cMult > 0) score += 120; 
-                    if (cMult === 0) score += 200; 
-                    if (cMult >= 2) score -= 150; 
-                } else if (teamWeaknesses[t] === 1) {
-                    if (cMult <= 0.5 && cMult > 0) score += 60; 
-                    if (cMult === 0) score += 100; 
-                    if (cMult >= 2) score -= 60; 
-                }
-            });
+                AT.forEach(t => {
+                    let cMult = multAtkVsTypes(t, cTypes);
+                    if (teamWeaknesses[t] >= 2) { 
+                        if (cMult <= 0.5 && cMult > 0) score += 120; 
+                        if (cMult === 0) score += 200; 
+                        if (cMult >= 2) score -= 150; 
+                    } else if (teamWeaknesses[t] === 1) {
+                        if (cMult <= 0.5 && cMult > 0) score += 60; 
+                        if (cMult === 0) score += 100; 
+                        if (cMult >= 2) score -= 60; 
+                    }
+                });
+            }
 
             // 5. ΕΠΙΘΕΤΙΚΗ ΚΑΛΥΨΗ
             let teamMoveTypes = new Set(bestTeam.flatMap(m => m.slot.moves).filter(x => x));
             candidate.slot.moves.filter(m => m).forEach(mt => {
-                if (!teamMoveTypes.has(mt)) score += 30; // Νέος τύπος επίθεσης
+                if (!teamMoveTypes.has(mt)) score += 30; 
             });
 
             // 6. ΙΣΟΡΡΟΠΙΑ ΡΟΛΩΝ
@@ -172,7 +165,7 @@ function autoRecommendTeam() {
             if (details.role === 'special' && spec >= 2) score -= 60;  
             if (details.role === 'tank' && tanks >= 3) score -= 80; 
 
-            console.log(`[Score: ${Math.floor(score)}] ${candidate.p.name} | Role: ${details.role} | Valid Moves: ${validMovesCount}`);
+            console.log(`[Score: ${Math.floor(score)}] ${candidate.p.name} | Role: ${details.role}`);
 
             if (score > bestScore) { bestScore = score; bestCandidate = candidate; }
         });
@@ -191,5 +184,5 @@ function autoRecommendTeam() {
     saveTeam(); 
     if (typeof renderTeamSlots === 'function') renderTeamSlots();
     
-    alert('🏆 Ομάδα έτοιμη! Ο αλγόριθμος ανέλυσε πλήρως τη Δύναμη, την Ακρίβεια, το STAB Bonus και τις Κατηγορίες των επιθέσεων σου για να φτιάξει την τέλεια ομάδα.');
+    alert('🏆 Ομάδα έτοιμη! Ο αλγόριθμος ανέλυσε τα δεδομένα (Target Mode ή Normal Mode) και έχτισε την ιδανική 6άδα.');
 }

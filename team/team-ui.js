@@ -107,21 +107,22 @@ function renderTeamSlots() {
     el.innerHTML = calcPanel() + filled.map(({ slot, i }, displayIndex) => { 
         const p = POKE.find(x => x.id === slot.pokemonId); 
         if (!p) return ''; 
-        const head = `<div class="slotImg">${spriteImg(p)}</div><div><div class="slotNum">Team ${displayIndex + 1}/${TEAM_SIZE} · #${String(p.id).padStart(4, '0')}</div><div class="slotName">${p.name.replace(/-/g, ' ')}</div><div class="slotTypes">${p.types.map(t => tb(t)).join('')}</div></div>`; 
+        const head = `<div class="slotHead">${spriteImg(p)}<div><div class="slotNum">Team ${displayIndex + 1}/${TEAM_SIZE} · #${String(p.id).padStart(4, '0')}</div><div class="slotName">${p.name.replace(/-/g, ' ')}</div><div class="slotTypes">${p.types.map(t => tb(t)).join('')}</div></div><div class="slotActions" style="margin-left:auto;"><button class="calcToggle ${slot.calc ? 'on' : ''}" type="button" data-calc="${i}">${slot.calc ? 'In calculate' : 'Add to calc'}</button><button class="clearSlot" type="button" data-clear="${i}" title="Clear slot">×</button></div></div>`; 
         
-        const meta = `<div class="metaGrid">
+        const meta = `<div class="metaGrid" style="margin-bottom: 12px;">
             <label>Level
-                <input type="number" min="1" max="100" value="${slot.level}" data-slot="${i}" data-field="level" style="width:100%; min-width:0; background:var(--bg); border:1px solid var(--brd); border-radius:7px; color:var(--txt); font:800 12px 'Nunito',sans-serif; padding:6px; outline:none; text-align:center;">
+                <input type="number" min="1" max="100" value="${slot.level}" data-slot="${i}" data-field="level" style="width:100%; box-sizing:border-box; background:var(--bg); border:1px solid var(--brd); border-radius:7px; color:var(--txt); font:800 12px 'Nunito',sans-serif; padding:6px; outline:none; text-align:center;">
             </label>
             <label>Nature<select data-slot="${i}" data-field="nature"><option value="">Select nature</option>${TEAM_NATURES.map(n => `<option value="${n}" ${slot.nature === n ? 'selected' : ''}>${n}</option>`).join('')}</select></label>
             <label>Ability<select data-slot="${i}" data-field="ability"><option value="">Select ability</option>${(ABILITIES[String(p.id)] || []).map(a => `<option value="${a}" ${slot.ability === a ? 'selected' : ''}>${a.replace(/-/g, ' ')}</option>`).join('')}</select></label>
-            <label>Held Item<select data-slot="${i}" data-field="item"><option value="">No item</option>${HELD_ITEMS.map(item => `<option value="${item}" ${slot.item === item ? 'selected' : ''}>${item}</option>`).join('')}</select></label>
+            <label>Item<select data-slot="${i}" data-field="item"><option value="">No item</option>${HELD_ITEMS.map(item => `<option value="${item}" ${slot.item === item ? 'selected' : ''}>${item}</option>`).join('')}</select></label>
         </div>`; 
         
-        const stats = TEAM_STATS.map(st => { const nc = natureClass(slot.nature, st), ivClass = nc ? `iv${nc[0].toUpperCase() + nc.slice(1)}` : ""; return `<div class="statBox ${nc}"><label>${st}</label><div class="statInputs"><span>IV</span><span>EV</span><input class="${ivClass}" type="number" min="0" max="31" value="${slot.iv[st]}" data-slot="${i}" data-kind="iv" data-stat="${st}" placeholder="0"><input type="number" min="0" max="252" value="${slot.ev[st]}" data-slot="${i}" data-kind="ev" data-stat="${st}" placeholder="0"></div></div>` }).join(''); 
+        const stats = `<div class="statGrid" style="margin-bottom: 15px;">` + TEAM_STATS.map(st => { const nc = natureClass(slot.nature, st), ivClass = nc ? `iv${nc[0].toUpperCase() + nc.slice(1)}` : ""; return `<div class="statBox ${nc}"><label>${st}</label><div class="statInputs"><span>IV</span><span>EV</span><input class="${ivClass}" type="number" min="0" max="31" value="${slot.iv[st]}" data-slot="${i}" data-kind="iv" data-stat="${st}" placeholder="0"><input type="number" min="0" max="252" value="${slot.ev[st]}" data-slot="${i}" data-kind="ev" data-stat="${st}" placeholder="0"></div></div>` }).join('') + `</div>`; 
+        
         const moveList = MOVES_BY_POKEMON[String(p.id)] || [];
         
-        const moves = `<div class="movesGrid">${[0, 1, 2, 3].map(m => {
+        const moves = `<div class="movesGrid" style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">${[0, 1, 2, 3].map(m => {
             const moveName = slot.moveNames[m] || '';
             const moveType = slot.moves[m] || '';
             const moveCat = slot.moveCats[m] || '';
@@ -140,9 +141,9 @@ function renderTeamSlots() {
                 statsHtml = `<span style="margin-left:auto; font-size:11px; opacity:0.8; font-family:monospace; color:var(--txt);">Pwr: <b>${displayPwr}</b> | Acc: <b>${displayAcc}</b></span>`;
             }
 
-            return `<div class="movePair">
-                <label style="display:flex; flex-direction:column;">Move ${m + 1}
-                    <select data-slot="${i}" data-move-name="${m}" title="${moveName ? moveName.replace(/-/g, ' ') : ''}" style="width:100%; min-width:max-content; margin-top:4px;">
+            return `<div class="movePair" style="display:flex; flex-direction:column; min-width:0;">
+                <label style="display:flex; flex-direction:column; width:100%;">Move ${m + 1}
+                    <select data-slot="${i}" data-move-name="${m}" title="${moveName ? moveName.replace(/-/g, ' ') : ''}" style="width:100%; box-sizing:border-box; text-overflow:ellipsis; margin-top:4px; padding:4px;">
                         <option value="">Select move...</option>
                         ${moveList.map(name => {
                             if(!name) return '';
@@ -150,7 +151,7 @@ function renderTeamSlots() {
                         }).join('')}
                     </select>
                 </label>
-                <div class="moveInfo" style="display:flex; align-items:center; gap:6px; margin-top:4px;">
+                <div class="moveInfo" style="display:flex; align-items:center; gap:6px; margin-top:6px;">
                     ${typeHtml}
                     ${catHtml}
                     ${statsHtml}
@@ -158,7 +159,8 @@ function renderTeamSlots() {
             </div>`;
         }).join('')}</div>`; 
         
-        return `<article class="slot"><div class="slotHead">${head}<div class="slotActions"><button class="calcToggle ${slot.calc ? 'on' : ''}" type="button" data-calc="${i}">${slot.calc ? 'In calculate' : 'Add to calculate'}</button><button class="clearSlot" type="button" data-clear="${i}" title="Clear slot">×</button></div></div>${meta}<div class="statGrid">${stats}</div>${moves}</article>` 
+        // Το μυστικό είναι το `style="height: auto; min-height: max-content; padding-bottom: 20px;"` στην κάρτα!
+        return `<article class="slot" style="height: auto !important; min-height: max-content !important; overflow: visible; padding-bottom: 20px;">${head}${meta}${stats}${moves}</article>` 
     }).join('');
 }
 

@@ -4,7 +4,23 @@ function card(p) {
     const { id, name, types } = p;
     const col = TC[types[0]] || '#888';
     const num = String(id).padStart(4, '0');
-    const img = spriteImg(p); // Χρησιμοποιεί τη συνάρτηση από το utils.js
+    const img = spriteImg(p);
+
+    // Υπολογισμός Abilities Notices
+    const pokeAbilities = ABILITIES[String(id)] || [];
+    let abilityNotices = [];
+
+    pokeAbilities.forEach(a => {
+        const cleanA = a.toLowerCase().replace(/-/g, ' ');
+        if (ABILITY_TYPE_MODS[cleanA]) {
+            // Δημιουργούμε ένα string π.χ. "Levitate: Ground Immunity"
+            const effects = Object.keys(ABILITY_TYPE_MODS[cleanA]).map(t => {
+                const mod = ABILITY_TYPE_MODS[cleanA][t];
+                return `${t.charAt(0).toUpperCase() + t.slice(1)} ${mod === 0 ? 'Immunity' : (mod < 1 ? 'Resist' : 'Weak')}`;
+            }).join(', ');
+            abilityNotices.push(`<span style="font-size:10px; display:block; color:#4dabf7; margin-top:2px;">💡 ${a}: ${effects}</span>`);
+        }
+    });
 
     return `<div class="card">
     <div class="ab" style="background:${col}"></div>
@@ -13,6 +29,7 @@ function card(p) {
       <div class="ph"><span class="num">#${num}</span><span class="pn">${name.replace(/-/g, ' ')}</span></div>
       <div class="tr">${types.map(t => tb(t)).join('')}</div>
       <div class="db">${dmgH(types)}</div>
+      <div class="ability-notices" style="margin-top:8px;">${abilityNotices.join('')}</div>
     </div>
   </div>`;
 }

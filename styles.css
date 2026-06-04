@@ -132,7 +132,8 @@ body.dex-view .teamOverlay{display:none}
 body.dex-view .sw{display:block}
 @media(max-width:620px){.teamBtn,.dexBtn{margin-left:0;flex:1;text-align:center}.logo{width:100%}}
 .teamOverlay{position:fixed;inset:0;z-index:300;background:rgba(5,5,12,.82);backdrop-filter:blur(10px);display:none;padding:18px;overflow:auto}.teamOverlay.open{display:block}
-.teamPanel{width:min(1320px,100%);margin:0 auto;background:var(--surf);border:1px solid var(--brd);border-radius:var(--r);box-shadow:0 22px 80px rgba(0,0,0,.55);overflow:hidden}
+
+.teamPanel{width:100%;max-width:none;margin:0;background:var(--surf);border:1px solid var(--brd);border-radius:var(--r);box-shadow:0 22px 80px rgba(0,0,0,.55);overflow:hidden}
 
 /* --- ΔΙΟΡΘΩΣΗ ΓΙΑ ΜΟΝΗ ΓΡΑΜΜΗ ΣΤΗΝ ΠΑΝΩ ΜΠΑΡΑ (Οριζόντιο Scroll) --- */
 .teamTop {

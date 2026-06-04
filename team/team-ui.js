@@ -68,11 +68,11 @@ function calcPanel() {
     const struggle = moveTypes.length ? typeCoverage.filter(x => x.best <= 1) : []; 
     
     const threats = AT.map(t => { 
-        const hits = selected.map(x => ({ name: x.p.name, m: multAtkVsTypes(t, x.p.types) })).filter(x => x.m > 1); 
+        const hits = selected.map(x => ({ name: x.p.name, m: getDynamicMult(t, x.p.types, x.slot.ability) })).filter(x => x.m > 1); 
         return { t, hits, count: hits.length, max: hits.reduce((a, x) => Math.max(a, x.m), 1) } 
     }).filter(x => x.count).sort((a, b) => b.count - a.count || b.max - a.max || a.t.localeCompare(b.t)); 
     
-    const defenseSafe = AT.filter(t => selected.some(x => multAtkVsTypes(t, x.p.types) < 1)); 
+    const defenseSafe = AT.filter(t => selected.some(x => getDynamicMult(t, x.p.types, x.slot.ability) < 1));
     const offenseScore = strong.length, defenseScore = defenseSafe.length; 
     
     const missingCoverage = struggle.map(x => x.t); 

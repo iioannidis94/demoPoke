@@ -120,47 +120,19 @@ main{position:relative;z-index:1;padding:14px 12px;max-width:1700px;margin:0 aut
 ::-webkit-scrollbar-thumb{background:var(--brd);border-radius:3px}
 
 /* MY TEAM */
-.teamBtn {
-  margin-left:auto;
-  border:1.5px solid var(--brd);
-  background:transparent;
-  color:var(--txt);
-  border-radius:50px;
-  padding:9px 15px;
-  font-family:'Nunito',sans-serif;
-  font-size:12px;
-  font-weight:900;
-  text-transform:uppercase;
-  letter-spacing:.4px;
-  cursor:pointer;
-  box-shadow:none;
-  transition:transform .15s,box-shadow .2s, border-color .15s, background .15s;
-}
-.teamBtn:hover {
-  transform:translateY(-1px);
-  border-color:var(--yel);
-}
-.dexBtn {
-  margin-left:0;
-}
-.teamBtn.on {
-  border-color:var(--yel);
-  background:linear-gradient(135deg,var(--yel),#ff8a00);
-  color:#171015;
-  box-shadow:0 0 22px rgba(255,204,0,.18);
-}
-
+.teamBtn{margin-left:auto;border:1.5px solid var(--yel);background:linear-gradient(135deg,var(--yel),#ff8a00);color:#171015;border-radius:50px;padding:9px 15px;font-family:'Nunito',sans-serif;font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:.4px;cursor:pointer;box-shadow:0 0 22px rgba(255,204,0,.18);transition:transform .15s,box-shadow .2s}
+.teamBtn:hover{transform:translateY(-1px);box-shadow:0 8px 24px rgba(255,204,0,.24)}
+.dexBtn{margin-left:0;background:transparent;color:var(--txt);border-color:var(--brd);box-shadow:none}
+.teamBtn.on{border-color:var(--yel);background:linear-gradient(135deg,var(--yel),#ff8a00);color:#171015;box-shadow:0 0 22px rgba(255,204,0,.18)}
 body.team-view .sw,body.team-view .tfs,body.team-view .sb,body.team-view main{display:none}
-
-body.team-view .teamOverlay{position:relative;inset:auto;display:block;z-index:1;background:transparent;backdrop-filter:none;padding:0;overflow:visible}
+body.team-view .teamOverlay{position:relative;inset:auto;display:block;z-index:1;background:transparent;backdrop-filter:none;padding:14px 12px 24px;overflow:visible}
 body.team-view .teamPanel{box-shadow:none}
 body.team-view .teamClose{display:none}
 body.dex-view .teamOverlay{display:none}
 body.dex-view .sw{display:block}
 @media(max-width:620px){.teamBtn,.dexBtn{margin-left:0;flex:1;text-align:center}.logo{width:100%}}
 .teamOverlay{position:fixed;inset:0;z-index:300;background:rgba(5,5,12,.82);backdrop-filter:blur(10px);display:none;padding:18px;overflow:auto}.teamOverlay.open{display:block}
-
-.teamPanel{width:100%;max-width:none;margin:0;background:var(--surf);border:1px solid var(--brd);border-radius:var(--r);box-shadow:0 22px 80px rgba(0,0,0,.55);overflow:hidden}
+.teamPanel{width:min(1320px,100%);margin:0 auto;background:var(--surf);border:1px solid var(--brd);border-radius:var(--r);box-shadow:0 22px 80px rgba(0,0,0,.55);overflow:hidden}
 
 /* --- ΔΙΟΡΘΩΣΗ ΓΙΑ ΜΟΝΗ ΓΡΑΜΜΗ ΣΤΗΝ ΠΑΝΩ ΜΠΑΡΑ (Οριζόντιο Scroll) --- */
 .teamTop {

@@ -43,7 +43,18 @@ function toggleCalc(i) { if (!team[i].pokemonId) return; if (!team[i].calc && ca
 
 function calcPanel() { 
     const selected = calcTeam(); 
-    if (!selected.length) return `<div class="calcPanel"><div class="calcHead"><strong>Battle Calculate</strong><span>0/6 selected</span></div><div class="calcEmpty">Use Add to calculate on up to 6 Pokémon.</div></div>`; 
+    
+    // Ασφαλής κλήση των UI Αντιπάλου, ώστε να υπάρχουν ΠΑΝΤΑ (ακόμα και στο Empty State)
+    const oppUI = window.getOpponentUI ? window.getOpponentUI() : '';
+    const matchupsUI = window.getMatchupsUI ? window.getMatchupsUI(selected) : '';
+
+    if (!selected.length) { 
+        return `<div class="calcPanel">
+            <div class="calcHead"><strong>Battle Calculate</strong><span>0/6 selected</span></div>
+            <div class="calcEmpty">Use "Add to calculate" on up to 6 Pokémon from your slots.</div>
+            ${oppUI}
+        </div>`; 
+    } 
     
     const moveEntries = selected.flatMap(x => x.slot.moves.map((type, i) => ({ type, cat: x.slot.moveCats[i] || '', name: x.p.name })).filter(m => m.type)); 
     const damaging = moveEntries.filter(m => m.cat !== 'status'); 
@@ -61,6 +72,7 @@ function calcPanel() {
     
     const defenseSafe = AT.filter(t => selected.some(x => multAtkVsTypes(t, x.p.types) < 1)); 
     const offenseScore = strong.length, defenseScore = defenseSafe.length; 
+    
     const missingCoverage = struggle.map(x => x.t); 
     const sharedWeak = threats.filter(x => x.count >= Math.max(2, Math.ceil(selected.length / 2))).map(x => x.t); 
     const x4Threats = threats.filter(x => x.max >= 4).map(x => x.t); 
@@ -82,7 +94,6 @@ function calcPanel() {
     const chips = list => list.length ? list.map(x => tb(x.t || x, 'calcBadge')).join('') : '<span class="calcNone">none</span>'; 
     const threatHtml = threats.length ? threats.slice(0, 10).map(x => `<span class="calcThreat" style="border-color:${TC[x.t] || '#888'}"><span style="background:${TC[x.t] || '#888'}">${x.t}</span>${x.count} weak${x.max >= 4 ? ` · x${x.max}` : ''}</span>`).join('') : '<span class="calcNone">No obvious type weaknesses.</span>'; 
     
-    // ΕΔΩ ΕΓΙΝΕ Η ΑΛΛΑΓΗ: Προστέθηκε το spriteImg(x.p) και ωραίο CSS styling (flexbox, borders)
     const selectedHtml = `<div class="calcSelected" style="display:flex; flex-wrap:wrap; justify-content:center; gap:12px; margin: 15px 0;">
         ${selected.map(x => `
             <div style="display:flex; flex-direction:column; align-items:center; background:var(--bg); border:1px solid var(--brd); border-radius:8px; padding:8px; min-width:70px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
@@ -100,16 +111,15 @@ function calcPanel() {
             <div><span>Physical</span><strong>${physicalCount}</strong></div>
             <div><span>Special</span><strong>${specialCount}</strong></div>
         </div>
+        <div class="calcNotes">${notes.length ? notes.map(n => `<p>${n}</p>`).join('') : '<p>Choose move types first to score offense.</p>'}</div>
         ${selectedHtml}
         <div class="calcRows">
             <div><b>Attack advantage</b><div class="calcBadges">${moveTypes.length ? chips(strong) : '<span class="calcNone">Choose damaging move types first.</span>'}</div></div>
+            <div><b>Attack struggles</b><div class="calcBadges">${moveTypes.length ? chips(struggle) : '<span class="calcNone">Choose damaging move types first.</span>'}</div></div>
             <div><b>Defensive threats</b><div class="calcBadges">${threatHtml}</div></div>
         </div>
-        
-        <!-- ΕΔΩ ΜΠΑΙΝΟΥΝ ΤΑ ΝΕΑ ΠΑΝΕΛ ΑΠΟ ΤΟ team-opp.js! -->
-        ${window.getOpponentUI ? window.getOpponentUI() : ''}
-        ${window.getMatchupsUI ? window.getMatchupsUI(selected) : ''}
-        
+        ${oppUI}
+        ${matchupsUI}
     </div>`;
 }
 

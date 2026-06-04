@@ -52,9 +52,9 @@ function calcPanel() {
     if (!selected.length) { 
         return `<div class="calcPanel" style="height: auto !important; min-height: max-content !important; overflow: visible !important; padding-bottom: 20px;">
             <div class="calcHead"><strong>Battle Calculate</strong><span>0/6 selected</span></div>
-            <!-- Βάζουμε το Κόκκινο Κουμπί ψηλά για να μην κρύβεται ποτέ! -->
+            <div class="calcEmpty" style="margin-bottom: 15px;">Use "Add to calculate" on up to 6 Pokémon from your slots.</div>
+            <!-- Το Κόκκινο Κουμπί στο ΚΑΤΩ μέρος -->
             ${oppUI}
-            <div class="calcEmpty" style="margin-top: 15px;">Use "Add to calculate" on up to 6 Pokémon from your slots.</div>
         </div>`; 
     } 
     
@@ -108,11 +108,7 @@ function calcPanel() {
     // --- FILLED STATE (Όταν έχεις επιλεγμένα Pokemon) ---
     return `<div class="calcPanel" style="height: auto !important; min-height: max-content !important; overflow: visible !important; padding-bottom: 20px;">
         <div class="calcHead"><strong>Battle Calculate</strong><span>${selected.length}/6 selected</span></div>
-        
-        <!-- Το Κόκκινο Κουμπί μπήκε ΠΑΝΩ από τα σκορ για να φαίνεται πρώτο-πρώτο! -->
-        ${oppUI}
-
-        <div class="calcScores" style="margin-top: 15px;">
+        <div class="calcScores">
             <div><span>Offense</span><strong>${offenseScore}/18</strong></div>
             <div><span>Defense</span><strong>${defenseScore}/18</strong></div>
             <div><span>Physical</span><strong>${physicalCount}</strong></div>
@@ -125,6 +121,9 @@ function calcPanel() {
             <div><b>Attack struggles</b><div class="calcBadges">${moveTypes.length ? chips(struggle) : '<span class="calcNone">Choose damaging move types first.</span>'}</div></div>
             <div><b>Defensive threats</b><div class="calcBadges">${threatHtml}</div></div>
         </div>
+        
+        <!-- Το Κόκκινο Κουμπί και τα Counters επέστρεψαν στο ΚΑΤΩ μέρος -->
+        ${oppUI}
         ${matchupsUI}
     </div>`;
 }
@@ -317,3 +316,14 @@ document.getElementById('autoTeamBtn')?.addEventListener('click', autoRecommendT
 
 // Start initialization
 openTeam();
+
+// ΤΟ ΑΠΟΛΥΤΟ FIX ΓΙΑ ΤΟ SHIFT+F5:
+// Αναγκάζει τον browser να ξαναζωγραφίσει το UI ΜΟΝΟ ΑΦΟΥ έχουν φορτώσει 100% ΟΛΑ τα αρχεία.
+window.addEventListener('load', () => {
+    if (typeof renderTeamSlots === 'function') {
+        renderTeamSlots();
+    }
+});
+
+
+

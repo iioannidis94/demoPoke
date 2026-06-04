@@ -125,7 +125,8 @@ main{position:relative;z-index:1;padding:14px 12px;max-width:1700px;margin:0 aut
 .dexBtn{margin-left:0;background:transparent;color:var(--txt);border-color:var(--brd);box-shadow:none}
 .teamBtn.on{border-color:var(--yel);background:linear-gradient(135deg,var(--yel),#ff8a00);color:#171015;box-shadow:0 0 22px rgba(255,204,0,.18)}
 body.team-view .sw,body.team-view .tfs,body.team-view .sb,body.team-view main{display:none}
-body.team-view .teamOverlay{position:relative;inset:auto;display:block;z-index:1;background:transparent;backdrop-filter:none;padding:14px 12px 24px;overflow:visible}
+
+body.team-view .teamOverlay{position:relative;inset:auto;display:block;z-index:1;background:transparent;backdrop-filter:none;padding:0;overflow:visible}
 body.team-view .teamPanel{box-shadow:none}
 body.team-view .teamClose{display:none}
 body.dex-view .teamOverlay{display:none}

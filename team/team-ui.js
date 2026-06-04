@@ -1,4 +1,3 @@
-
 // --- team-ui.js : Team Builder UI & Events ---
 
 function updateTeamDropdown() {
@@ -27,7 +26,15 @@ function setStat(slot, kind, stat, value, el) {
 
 function setMoveType(slot, move, value) { team[slot].moves[move] = value; saveTeam(); if (team[slot].calc) renderTeamSlots() } 
 function setMoveCat(slot, move, value) { team[slot].moveCats[move] = value; saveTeam(); if (team[slot].calc) renderTeamSlots() } 
-function setMoveName(slot, move, value) { const info = MOVE_INFO[value] || {}; team[slot].moveNames[move] = value; team[slot].moves[move] = info.type || ''; team[slot].moveCats[move] = info.cat || ''; saveTeam(); renderTeamSlots() }
+function setMoveName(slot, move, value) { 
+    // SAFE CHECK: Μην κρασάρεις αν το MOVE_INFO λείπει
+    const info = (typeof MOVE_INFO !== 'undefined' && MOVE_INFO[value]) ? MOVE_INFO[value] : {}; 
+    team[slot].moveNames[move] = value; 
+    team[slot].moves[move] = info.type || ''; 
+    team[slot].moveCats[move] = info.cat || ''; 
+    saveTeam(); 
+    renderTeamSlots() 
+}
 function setMeta(slot, field, value) { team[slot][field] = value; saveTeam(); if (field === 'nature') renderTeamSlots() }
 function natureClass(nature, stat) { const e = TEAM_NATURE_EFFECTS[nature]; if (!e) return ''; return e[0] === stat ? 'boost' : e[1] === stat ? 'drop' : '' }
 function clearSlot(i) { team[i] = EMPTY_SLOT(); saveTeam(); renderTeamSlots() }
@@ -122,24 +129,25 @@ function renderTeamSlots() {
             const typeHtml = moveType ? tb(moveType) : '<span class="cat-badge cat-empty">Type</span>';
             const catHtml = moveCat && moveCategories[moveCat] ? moveCategories[moveCat] : '<span class="cat-badge cat-empty">Cat</span>';
 
-        let statsHtml = '';
+            let statsHtml = '';
             if (moveName && typeof MOVE_INFO !== 'undefined' && MOVE_INFO[moveName]) {
                 const power = MOVE_INFO[moveName].power;
                 const acc = MOVE_INFO[moveName].acc;
                 
-                // Αν το power είναι undefined, βάζουμε '??'. Αν είναι 0, βάζουμε '-'. Αλλιώς τον αριθμό.
                 const displayPwr = power === undefined ? '??' : (power === 0 ? '-' : power);
                 const displayAcc = acc === undefined ? '??' : ((acc === 0 || acc === null) ? '-' : acc);
                 
                 statsHtml = `<span style="margin-left:auto; font-size:11px; opacity:0.8; font-family:monospace; color:var(--txt);">Pwr: <b>${displayPwr}</b> | Acc: <b>${displayAcc}</b></span>`;
             }
 
-            // ΕΔΩ ΕΓΙΝΕ Η ΑΛΛΑΓΗ: Προστέθηκε το title και το style="width:100%; min-width:max-content;"
             return `<div class="movePair">
                 <label style="display:flex; flex-direction:column;">Move ${m + 1}
-                    <select data-slot="${i}" data-move-name="${m}" title="${moveName.replace(/-/g, ' ')}" style="width:100%; min-width:max-content; margin-top:4px;">
+                    <select data-slot="${i}" data-move-name="${m}" title="${moveName ? moveName.replace(/-/g, ' ') : ''}" style="width:100%; min-width:max-content; margin-top:4px;">
                         <option value="">Select move...</option>
-                        ${moveList.map(name => `<option value="${name}" ${moveName === name ? 'selected' : ''}>${name.replace(/-/g, ' ')}</option>`).join('')}
+                        ${moveList.map(name => {
+                            if(!name) return '';
+                            return `<option value="${name}" ${moveName === name ? 'selected' : ''}>${name.replace(/-/g, ' ')}</option>`;
+                        }).join('')}
                     </select>
                 </label>
                 <div class="moveInfo" style="display:flex; align-items:center; gap:6px; margin-top:4px;">
@@ -152,6 +160,21 @@ function renderTeamSlots() {
         
         return `<article class="slot"><div class="slotHead">${head}<div class="slotActions"><button class="calcToggle ${slot.calc ? 'on' : ''}" type="button" data-calc="${i}">${slot.calc ? 'In calculate' : 'Add to calculate'}</button><button class="clearSlot" type="button" data-clear="${i}" title="Clear slot">×</button></div></div>${meta}<div class="statGrid">${stats}</div>${moves}</article>` 
     }).join('');
+}
+
+function setView(view) { 
+    const teamView = view === 'team'; 
+    document.body.classList.toggle('team-view', teamView); 
+    document.body.classList.toggle('dex-view', !teamView); 
+    document.getElementById('myTeamBtn').classList.toggle('on', teamView); 
+    document.getElementById('dexViewBtn').classList.toggle('on', !teamView); 
+    document.getElementById('teamOverlay').setAttribute('aria-hidden', teamView ? 'false' : 'true');
+    
+    if (teamView) { 
+        renderTeamList(); 
+        renderTeamSlots(); 
+        updateTeamDropdown(); 
+    }
 }
 
 function openTeam() { setView('team') }

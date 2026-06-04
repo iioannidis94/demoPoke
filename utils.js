@@ -87,3 +87,44 @@ function showTypeChart(type) {
     `;
     overlay.style.display = 'flex';
 }
+
+// --- ΠΡΟΣΘΗΚΗ ΣΤΟ ΤΕΛΟΣ ΤΟΥ utils.js ---
+
+// Λεξικό: Πώς τα Abilities αλλάζουν το Damage (0 = Immune, 0.5 = Resist, 2 = Weak)
+const ABILITY_TYPE_MODS = {
+    "levitate": { "ground": 0 },
+    "water absorb": { "water": 0 },
+    "dry skin": { "water": 0, "fire": 1.25 },
+    "storm drain": { "water": 0 },
+    "volt absorb": { "electric": 0 },
+    "lightning rod": { "electric": 0 },
+    "motor drive": { "electric": 0 },
+    "flash fire": { "fire": 0 },
+    "well-baked body": { "fire": 0 },
+    "sap sipper": { "grass": 0 },
+    "earth eater": { "ground": 0 },
+    "thick fat": { "fire": 0.5, "ice": 0.5 },
+    "water bubble": { "fire": 0.5 },
+    "purifying salt": { "ghost": 0.5 },
+    "heatproof": { "fire": 0.5 },
+    "fluffy": { "fire": 2 }
+};
+
+// Η νέα, Έξυπνη Συνάρτηση Υπολογισμού
+function getDynamicMult(atkType, defTypes, ability) {
+    // 1. Παίρνουμε το κανονικό multiplier από τους τύπους
+    let mult = multAtkVsTypes(atkType, defTypes);
+    
+    // 2. Αν το Pokémon έχει Ability, ελέγχουμε αν αλλάζει κάτι
+    if (ability) {
+        let cleanAbility = ability.toLowerCase().replace(/-/g, ' '); // Καθαρισμός ονόματος
+        if (ABILITY_TYPE_MODS[cleanAbility]) {
+            const mod = ABILITY_TYPE_MODS[cleanAbility][atkType.toLowerCase()];
+            if (mod !== undefined) {
+                if (mod === 0) return 0; // Απόλυτη Ανοσία (π.χ. Levitate)
+                mult *= mod; // Πολλαπλασιασμός (π.χ. x0.5 για Thick Fat)
+            }
+        }
+    }
+    return mult;
+}

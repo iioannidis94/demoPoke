@@ -122,27 +122,27 @@ function renderTeamSlots() {
             const typeHtml = moveType ? tb(moveType) : '<span class="cat-badge cat-empty">Type</span>';
             const catHtml = moveCat && moveCategories[moveCat] ? moveCategories[moveCat] : '<span class="cat-badge cat-empty">Cat</span>';
 
-            // --- ΝΕΟΣ ΚΩΔΙΚΑΣ: Υπολογισμός Power & Accuracy ---
-            let statsHtml = '';
+        let statsHtml = '';
             if (moveName && typeof MOVE_INFO !== 'undefined' && MOVE_INFO[moveName]) {
                 const power = MOVE_INFO[moveName].power;
                 const acc = MOVE_INFO[moveName].acc;
                 
-                const displayPwr = power === 0 ? '-' : power;
-                const displayAcc = (acc === 0 || acc === null) ? '-' : acc;
+                // Αν το power είναι undefined, βάζουμε '??'. Αν είναι 0, βάζουμε '-'. Αλλιώς τον αριθμό.
+                const displayPwr = power === undefined ? '??' : (power === 0 ? '-' : power);
+                const displayAcc = acc === undefined ? '??' : ((acc === 0 || acc === null) ? '-' : acc);
                 
-                // Το margin-left:auto θα το σπρώξει όμορφα στα δεξιά του κουτιού
                 statsHtml = `<span style="margin-left:auto; font-size:11px; opacity:0.8; font-family:monospace; color:var(--txt);">Pwr: <b>${displayPwr}</b> | Acc: <b>${displayAcc}</b></span>`;
             }
 
+            // ΕΔΩ ΕΓΙΝΕ Η ΑΛΛΑΓΗ: Προστέθηκε το title και το style="width:100%; min-width:max-content;"
             return `<div class="movePair">
-                <label>Move ${m + 1}
-                    <select data-slot="${i}" data-move-name="${m}">
+                <label style="display:flex; flex-direction:column;">Move ${m + 1}
+                    <select data-slot="${i}" data-move-name="${m}" title="${moveName.replace(/-/g, ' ')}" style="width:100%; min-width:max-content; margin-top:4px;">
                         <option value="">Select move...</option>
                         ${moveList.map(name => `<option value="${name}" ${moveName === name ? 'selected' : ''}>${name.replace(/-/g, ' ')}</option>`).join('')}
                     </select>
                 </label>
-                <div class="moveInfo" style="display:flex; align-items:center; gap:6px;">
+                <div class="moveInfo" style="display:flex; align-items:center; gap:6px; margin-top:4px;">
                     ${typeHtml}
                     ${catHtml}
                     ${statsHtml}
@@ -152,21 +152,6 @@ function renderTeamSlots() {
         
         return `<article class="slot"><div class="slotHead">${head}<div class="slotActions"><button class="calcToggle ${slot.calc ? 'on' : ''}" type="button" data-calc="${i}">${slot.calc ? 'In calculate' : 'Add to calculate'}</button><button class="clearSlot" type="button" data-clear="${i}" title="Clear slot">×</button></div></div>${meta}<div class="statGrid">${stats}</div>${moves}</article>` 
     }).join('');
-}
-
-function setView(view) { 
-    const teamView = view === 'team'; 
-    document.body.classList.toggle('team-view', teamView); 
-    document.body.classList.toggle('dex-view', !teamView); 
-    document.getElementById('myTeamBtn').classList.toggle('on', teamView); 
-    document.getElementById('dexViewBtn').classList.toggle('on', !teamView); 
-    document.getElementById('teamOverlay').setAttribute('aria-hidden', teamView ? 'false' : 'true');
-    
-    if (teamView) { 
-        renderTeamList(); 
-        renderTeamSlots(); 
-        updateTeamDropdown(); 
-    }
 }
 
 function openTeam() { setView('team') }

@@ -1,15 +1,18 @@
-// --- team-opp.js : Λογική Αντίπαλης Ομάδας (Assassin/Target Mode) ---
+// --- team-opp.js : Λογική Αντίπαλης Ομάδας (Assassin Mode με Base Stats Analysis) ---
 
 window.oppTeam = window.oppTeam || [];
+window.showOppPanel = window.showOppPanel || false; // Κρατάει την κατάσταση του Κόκκινου Κουμπιού
+
+window.toggleOppPanel = function() {
+    window.showOppPanel = !window.showOppPanel;
+    if(typeof renderTeamSlots === 'function') renderTeamSlots();
+};
 
 window.searchAndAddOpponent = function() {
     const input = document.getElementById('oppSearchInput').value.toLowerCase().trim();
     if(!input) return;
 
-    // Καθαρίζουμε το input για να βρίσκει τα Pokémon ακόμα κι αν έχουν κενά αντί για παύλες (π.χ. "mr mime")
     const normalizedInput = input.replace(/\s+/g, '-');
-
-    // Ψάχνει το Pokémon. Πρώτα ελέγχει για ακριβές όνομα (π.χ. από το datalist), μετά για ID, και μετά για partial match
     const p = POKE.find(x => 
         x.name.toLowerCase() === normalizedInput || 
         x.name.toLowerCase().replace(/-/g, ' ') === input ||
@@ -21,10 +24,7 @@ window.searchAndAddOpponent = function() {
     if(window.oppTeam.length >= 6) return alert('Η αντίπαλη ομάδα είναι γεμάτη (Max 6)!');
     
     window.oppTeam.push(p.id);
-    
-    // Καθαρίζουμε το πεδίο μόλις προστεθεί για να είναι έτοιμο για το επόμενο!
     if(document.getElementById('oppSearchInput')) document.getElementById('oppSearchInput').value = '';
-
     if(typeof renderTeamSlots === 'function') renderTeamSlots();
 };
 
@@ -38,24 +38,76 @@ window.clearOpponents = function() {
     if(typeof renderTeamSlots === 'function') renderTeamSlots();
 };
 
-// Φτιάχνει το UI της αναζήτησης
+// --- Η ΝΕΑ ΜΑΓΕΙΑ: Σύγκριση Base Stats & Move Categories ---
+window.getCombatScore = function(myCandidate, oppP) {
+    let score = 0;
+    
+    // Φέρνουμε τα Base Stats του Αντιπάλου
+    let opBs = (typeof BASE_STATS !== 'undefined' && BASE_STATS[oppP.id]) ? BASE_STATS[oppP.id] : {hp:80, atk:80, def:80, spa:80, spd:80, spe:80};
+    
+    // Υπολογίζουμε τα δικά μας περίπου Stats (Base + EVs) για να δούμε αν βαράμε πιο δυνατά Physical ή Special
+    let myBs = (typeof BASE_STATS !== 'undefined' && BASE_STATS[myCandidate.p.id]) ? BASE_STATS[myCandidate.p.id] : {hp:80, atk:80, def:80, spa:80, spd:80, spe:80};
+    let myAtk = myBs.atk + Math.floor((Number(myCandidate.slot.ev.ATK) || 0) / 4);
+    let mySpa = myBs.spa + Math.floor((Number(myCandidate.slot.ev.SPATK) || 0) / 4);
+
+    // 1. ΑΜΥΝΤΙΚΟΣ ΕΛΕΓΧΟΣ (Αντέχω το STAB του αντίπαλου;)
+    oppP.types.forEach(ot => {
+        let defMult = multAtkVsTypes(ot, myCandidate.p.types);
+        if (defMult > 1) score -= 80;  
+        if (defMult < 1) score += 40;  
+        if (defMult === 0) score += 100; 
+    });
+
+    // 2. ΕΠΙΘΕΤΙΚΟΣ ΕΛΕΓΧΟΣ (Moves vs Opponent Base Defenses)
+    let bestMoveScore = 0;
+    
+    (myCandidate.slot.moveNames || []).forEach(mName => {
+        if (!mName) return;
+        let mInfo = typeof MOVE_INFO !== 'undefined' ? MOVE_INFO[mName] : null;
+        if (!mInfo || mInfo.power === 0) return; // Αγνοούμε τα Status Moves εδώ
+
+        let offMult = multAtkVsTypes(mInfo.type, oppP.types);
+        let moveScore = 0;
+
+        if (offMult > 1) moveScore += 60;
+        if (offMult > 2) moveScore += 130;
+        if (offMult < 1) moveScore -= 40;
+
+        // ΣΥΓΚΡΙΣΗ ΣΤΑΤΙΣΤΙΚΩΝ: Physical vs Special
+        if (mInfo.cat === 'physical') {
+            if (opBs.def > 105) moveScore -= 35; // Ο Αντίπαλος είναι Physical Wall! (Πέναλτι)
+            if (opBs.def < 70) moveScore += 45;  // Ο Αντίπαλος έχει χάλια Defense! (Μπόνους)
+            if (myAtk > mySpa) moveScore += 20;  // Παίζουμε στο δυνατό μας Stat
+        } else if (mInfo.cat === 'special') {
+            if (opBs.spd > 105) moveScore -= 35; // Ο Αντίπαλος είναι Special Wall! (Πέναλτι)
+            if (opBs.spd < 70) moveScore += 45;  // Ο Αντίπαλος έχει χάλια Sp. Defense! (Μπόνους)
+            if (mySpa > myAtk) moveScore += 20;  // Παίζουμε στο δυνατό μας Stat
+        }
+
+        if (moveScore > bestMoveScore) bestMoveScore = moveScore;
+    });
+
+    return score + bestMoveScore;
+};
+
+// UI της αναζήτησης (Με το Κόκκινο Κουμπί!)
 window.getOpponentUI = function() {
-    // Δημιουργούμε το HTML για το Datalist (τα recommendations)
     const optionsHtml = typeof POKE !== 'undefined' ? POKE.map(p => `<option value="${p.name.replace(/-/g, ' ')}">`).join('') : '';
 
-    return `
-    <div class="opp-panel" style="margin-top:25px; padding:15px; background:rgba(255, 77, 79, 0.05); border:1px solid #ff4d4f; border-radius:8px;">
-        <!-- Το Datalist κρύβεται στο παρασκήνιο και "ταΐζει" το input -->
-        <datalist id="oppPokeList">
-            ${optionsHtml}
-        </datalist>
-        
+    const toggleBtn = `<button onclick="toggleOppPanel()" style="width:100%; padding:12px; background: ${window.showOppPanel ? '#555' : '#ff4d4f'}; color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer; margin-top:20px; font-size:14px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); transition: 0.2s;">
+        ${window.showOppPanel ? '❌ Κλείσιμο Πάνελ Αντιπάλου' : '🎯 Προσθήκη Αντίπαλης Ομάδας (Assassin Mode)'}
+    </button>`;
+
+    if (!window.showOppPanel) return toggleBtn;
+
+    return toggleBtn + `
+    <div class="opp-panel" style="margin-top:15px; padding:15px; background:rgba(255, 77, 79, 0.05); border:1px solid #ff4d4f; border-radius:8px;">
+        <datalist id="oppPokeList">${optionsHtml}</datalist>
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-            <strong style="color:#ff4d4f; font-size:15px;">🎯 VS Αντίπαλη Ομάδα (Target Mode)</strong>
+            <strong style="color:#ff4d4f; font-size:15px;">Εκτελεστής (Target Mode)</strong>
             <button onclick="clearOpponents()" style="background:#ff4d4f; color:white; border:none; padding:4px 8px; border-radius:4px; cursor:pointer; font-size:11px;">Καθαρισμός</button>
         </div>
         <div style="display:flex; gap:10px; margin-bottom:15px;">
-            <!-- Προστέθηκε το list="oppPokeList" και το onkeydown για το Enter -->
             <input type="text" id="oppSearchInput" list="oppPokeList" onkeydown="if(event.key === 'Enter') searchAndAddOpponent()" placeholder="Π.χ. garchomp ή 445" style="flex:1; padding:8px; border-radius:4px; border:1px solid var(--brd); background:var(--bg); color:var(--txt);">
             <button onclick="searchAndAddOpponent()" style="padding:8px 15px; cursor:pointer; background:#4dabf7; color:white; border:none; border-radius:4px; font-weight:bold;">Προσθήκη</button>
         </div>
@@ -72,9 +124,9 @@ window.getOpponentUI = function() {
     </div>`;
 };
 
-// Υπολογίζει τα Counters για το UI
+// Counters UI (Χρησιμοποιεί τον νέο έξυπνο αλγόριθμο!)
 window.getMatchupsUI = function(selected) {
-    if(window.oppTeam.length === 0 || !selected || selected.length === 0) return '';
+    if(!window.showOppPanel || window.oppTeam.length === 0 || !selected || selected.length === 0) return '';
     
     let html = `<div style="margin-top:20px; padding:12px; background:rgba(77, 171, 247, 0.05); border:1px solid #4dabf7; border-radius:8px;">
         <strong style="color:#4dabf7; font-size:14px;">🔥 Τα Καλύτερα Counters (Από την ομάδα σου):</strong>
@@ -85,19 +137,7 @@ window.getMatchupsUI = function(selected) {
         let bestCounter = null; let bestScore = -9999;
 
         selected.forEach(my => {
-            let score = 0;
-            op.types.forEach(ot => {
-                let mult = multAtkVsTypes(ot, my.p.types);
-                if(mult < 1) score += 20; 
-                if(mult === 0) score += 50; 
-                if(mult > 1) score -= 40; 
-            });
-            my.slot.moves.forEach(mt => {
-                if(!mt) return;
-                let mult = multAtkVsTypes(mt, op.types);
-                if(mult > 1) score += 40;
-                if(mult > 2) score += 90; 
-            });
+            let score = window.getCombatScore(my, op); // Η έξυπνη συνάρτηση!
             if(score > bestScore) { bestScore = score; bestCounter = my; }
         });
 
@@ -116,24 +156,13 @@ window.getMatchupsUI = function(selected) {
     return html + `</div></div>`;
 };
 
-// Υπολογίζει το Score για τον αλγόριθμο AI (Assassin Mode)
+// AI Engine (Χρησιμοποιεί τον νέο έξυπνο αλγόριθμο!)
 window.calcAssassinScore = function(candidate) {
     let oppScore = 0;
     let oppData = window.oppTeam.map(id => POKE.find(p => p.id === id));
 
     oppData.forEach(oppP => {
-        oppP.types.forEach(ot => {
-            let defMult = multAtkVsTypes(ot, candidate.p.types);
-            if (defMult > 1) oppScore -= 80;  
-            if (defMult < 1) oppScore += 40;  
-            if (defMult === 0) oppScore += 100; 
-        });
-        candidate.slot.moves.forEach(mt => {
-            if(!mt) return;
-            let offMult = multAtkVsTypes(mt, oppP.types);
-            if (offMult > 1) oppScore += 60; 
-            if (offMult > 2) oppScore += 130; 
-        });
+        oppScore += window.getCombatScore(candidate, oppP); // Προσθέτει το σκορ από κάθε αντίπαλο
     });
     
     let validMovesCount = candidate.slot.moves.filter(m => m).length;

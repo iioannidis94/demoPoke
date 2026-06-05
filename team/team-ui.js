@@ -105,9 +105,15 @@ function calcPanel() {
         `).join('')}
     </div>`;
 
-    // --- FILLED STATE (Όταν έχεις επιλεγμένα Pokemon) ---
+// --- FILLED STATE (Όταν έχεις επιλεγμένα Pokemon) ---
     return `<div class="calcPanel" style="height: auto !important; min-height: max-content !important; overflow: visible !important; padding-bottom: 20px;">
         <div class="calcHead"><strong>Battle Calculate</strong><span>${selected.length}/6 selected</span></div>
+        
+        <!-- ΤΟ ΝΕΟ ΚΟΥΜΠΙ ΓΙΑ ΤΙΣ ΕΠΙΘΕΣΕΙΣ (Move Optimizer) -->
+        <button onclick="showMoveRecommendations()" style="width:100%; padding:10px; margin-top:10px; margin-bottom:15px; background:#4dabf7; color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer; font-size:14px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); transition: 0.2s;">
+            💡 Έξυπνες Προτάσεις Επιθέσεων (Optimizer)
+        </button>
+
         <div class="calcScores">
             <div><span>Offense</span><strong>${offenseScore}/18</strong></div>
             <div><span>Defense</span><strong>${defenseScore}/18</strong></div>
@@ -122,7 +128,7 @@ function calcPanel() {
             <div><b>Defensive threats</b><div class="calcBadges">${threatHtml}</div></div>
         </div>
         
-        <!-- Το Κόκκινο Κουμπί και τα Counters επέστρεψαν στο ΚΑΤΩ μέρος -->
+        <!-- Το Κόκκινο Κουμπί και τα Counters στο ΚΑΤΩ μέρος -->
         ${oppUI}
         ${matchupsUI}
     </div>`;

@@ -38,7 +38,14 @@ function setMoveName(slot, move, value) {
 function setMeta(slot, field, value) { team[slot][field] = value; saveTeam(); if (field === 'nature') renderTeamSlots() }
 function natureClass(nature, stat) { const e = TEAM_NATURE_EFFECTS[nature]; if (!e) return ''; return e[0] === stat ? 'boost' : e[1] === stat ? 'drop' : '' }
 function clearSlot(i) { team[i] = EMPTY_SLOT(); saveTeam(); renderTeamSlots() }
-function calcTeam() { return team.map((slot, i) => ({ slot, i, p: POKE.find(x => x.id === slot.pokemonId) })).filter(x => x.slot.pokemonId && x.slot.calc && x.p).slice(0, 6) }
+function calcTeam() { 
+    return team.map((slot, i) => ({ slot, i, p: POKE.find(x => x.id === slot.pokemonId) }))
+        .filter(x => x.slot.pokemonId && x.slot.calc && x.p)
+        // ΝΕΟ: Ταξινομεί τους επιλεγμένους με βάση το AI Score (Φθίνουσα σειρά)
+        .sort((a, b) => (b.slot.aiScore || 0) - (a.slot.aiScore || 0))
+        .slice(0, 6); 
+}
+
 function toggleCalc(i) { if (!team[i].pokemonId) return; if (!team[i].calc && calcTeam().length >= 6) { alert('You can calculate up to 6 Pokémon at a time.'); return } team[i].calc = !team[i].calc; saveTeam(); renderTeamSlots() }
 
 function calcPanel() { 

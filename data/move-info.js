@@ -806,6 +806,7 @@ const MOVE_INFO = {
     "tachyon-cutter": { "type": "steel", "cat": "special", "power": 50, "acc": 0 },
     "hard-press": { "type": "steel", "cat": "physical", "power": 0, "acc": 100 },
     "dragon-cheer": { "type": "dragon", "cat": "status", "power": 0, "acc": 0 },
+    "megahorn": { "type": "bug", "cat": "physical", "power": 120, "acc": 85 },
     "malignant-chain": { "type": "poison", "cat": "special", "power": 100, "acc": 100 }
     
   };

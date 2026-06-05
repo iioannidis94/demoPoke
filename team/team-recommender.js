@@ -1,4 +1,3 @@
-
 // --- team-recommender.js : Move Optimizer & AI Recommendations ---
 
 window.showMoveRecommendations = function() {
@@ -17,20 +16,34 @@ window.showMoveRecommendations = function() {
             <div style="display:flex; flex-direction:column; gap:15px;">`;
 
     selected.forEach(x => {
-        let pName = x.p.name.toLowerCase();
-        let moveList = typeof MOVES_BY_POKEMON !== 'undefined' ? (MOVES_BY_POKEMON[pName] || MOVES_BY_POKEMON[pName.replace(/-/g, ' ')] || []) : [];
+        // ΑΛΕΞΙΣΦΑΙΡΗ ΑΝΑΖΗΤΗΣΗ ΕΠΙΘΕΣΕΩΝ (Ψάχνει με Όνομα, ID, Μικρά, Κεφαλαία)
+        let moveList = [];
+        if (typeof MOVES_BY_POKEMON !== 'undefined') {
+            moveList = MOVES_BY_POKEMON[x.p.name] 
+                    || MOVES_BY_POKEMON[x.p.name.toLowerCase()] 
+                    || MOVES_BY_POKEMON[String(x.p.id)] 
+                    || MOVES_BY_POKEMON[x.p.id] 
+                    || [];
+        }
 
-        if (!moveList.length) return;
+        if (!moveList.length) {
+            console.warn("Δεν βρέθηκαν επιθέσεις στη βάση δεδομένων για:", x.p.name);
+            return; 
+        }
 
-        // Υπολογισμός Ρόλου (DNA Stats)
-        let bs = (typeof BASE_STATS !== 'undefined' && BASE_STATS[x.p.id]) ? BASE_STATS[x.p.id] : {hp:80, atk:80, def:80, spa:80, spd:80, spe:80};
+        // ΑΛΕΞΙΣΦΑΙΡΗ ΑΝΑΖΗΤΗΣΗ BASE STATS (Όπως στο team-ai.js)
+        let bs = (typeof BASE_STATS !== 'undefined' && BASE_STATS[x.p.id]) ? BASE_STATS[x.p.id] : null;
+        if (!bs && x.p.baseStats) bs = x.p.baseStats; 
+        if (!bs && x.p.stats) bs = { hp: x.p.stats[0], atk: x.p.stats[1], def: x.p.stats[2], spa: x.p.stats[3], spd: x.p.stats[4], spe: x.p.stats[5] };
+        if (!bs) bs = {hp:80, atk:80, def:80, spa:80, spd:80, spe:80};
+
         let isPhysical = bs.atk > (bs.spa * 1.15); // Ξεκάθαρος Physical
         let isSpecial = bs.spa > (bs.atk * 1.15);  // Ξεκάθαρος Special
         let isMixed = !isPhysical && !isSpecial;   // Μπορεί να παίξει και τα δύο
 
         let scoredMoves = [];
 
-        // Αξιολόγηση κάθε κίνησης που μπορεί να μάθει!
+        // Αξιολόγηση κάθε κίνησης
         moveList.forEach(mName => {
             let cleanName = mName.toLowerCase().replace(/\s+/g, '-');
             let mInfo = typeof MOVE_INFO !== 'undefined' ? (MOVE_INFO[mName] || MOVE_INFO[cleanName]) : null;
@@ -95,17 +108,17 @@ window.showMoveRecommendations = function() {
                 <span style="font-size:12px; background:rgba(77, 171, 247, 0.2); color:#4dabf7; padding:3px 8px; border-radius:12px;">${roleText}</span>
             </div>
             <div style="display:flex; flex-wrap:wrap; gap:10px;">
-                ${topMoves.map(m => {
+                ${topMoves.length ? topMoves.map(m => {
                     let color = typeof TC !== 'undefined' ? TC[m.info.type] : '#888';
                     let isStatus = m.info.cat === 'status';
-                    return `<div style="border-left: 4px solid ${color}; padding:8px 12px; background:var(--bg); border-radius:6px; font-size:13px; display:flex; flex-direction:column; min-width:140px; box-shadow:0 2px 5px rgba(0,0,0,0.2);">
-                        <strong style="color:${color}; font-size:14px; text-transform:capitalize;">${m.name.replace(/-/g, ' ')}</strong>
+                    return \`<div style="border-left: 4px solid \${color}; padding:8px 12px; background:var(--bg); border-radius:6px; font-size:13px; display:flex; flex-direction:column; min-width:140px; box-shadow:0 2px 5px rgba(0,0,0,0.2);">
+                        <strong style="color:\${color}; font-size:14px; text-transform:capitalize;">\${m.name.replace(/-/g, ' ')}</strong>
                         <span style="opacity:0.8; font-family:monospace; margin-top:5px; font-size:11px;">
-                            ${isStatus ? 'Type: Status' : `Pwr: <b style="color:white">${m.info.power}</b> | Acc: <b style="color:white">${m.info.acc}</b>`}
+                            \${isStatus ? 'Type: Status' : \`Pwr: <b style="color:white">\${m.info.power}</b> | Acc: <b style="color:white">\${m.info.acc}</b>\`}
                         </span>
-                        ${m.reasons.length ? `<span style="font-size:11px; color:#4dabf7; margin-top:4px; font-weight:bold;">${m.reasons.join(', ')}</span>` : ''}
-                    </div>`;
-                }).join('')}
+                        \${m.reasons.length ? \`<span style="font-size:11px; color:#4dabf7; margin-top:4px; font-weight:bold;">\${m.reasons.join(', ')}</span>\` : ''}
+                    </div>\`;
+                }).join('') : '<span style="color:red; font-size:12px;">Δεν βρέθηκαν προτεινόμενες επιθέσεις.</span>'}
             </div>
         </div>`;
     });

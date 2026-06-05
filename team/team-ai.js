@@ -63,7 +63,9 @@ function autoRecommendTeam() {
         let details = getRoleDetails(candidate.slot, candidate.p);
         candidate.details = details;
 
-        baseScore += (candidate.slot.level * 4); // Το Level δίνει τεράστιο προβάδισμα
+        // 🔥 ΤΕΡΑΣΤΙΟ ΜΠΟΝΟΥΣ ΣΤΟ LEVEL ΚΑΙ ΤΑ ΣΤΑΤΙΣΤΙΚΑ!
+        // Ένα Lvl 100 παίρνει 1500 πόντους, ένα Lvl 75 παίρνει 1125! (Τεράστια διαφορά 375 πόντων)
+        baseScore += (candidate.slot.level * 15); 
         
         let statKeys = ['HP', 'ATK', 'DEF', 'SPATK', 'SPDEF', 'SPD'];
         let totalEvs = statKeys.reduce((sum, stat) => sum + (Number(candidate.slot.ev?.[stat]) || 0), 0);
@@ -72,8 +74,10 @@ function autoRecommendTeam() {
         let totalIvs = statKeys.reduce((sum, stat) => sum + (Number(candidate.slot.iv?.[stat]) || 0), 0);
         baseScore += (totalIvs); 
         
-        baseScore += (details.bstReal / 3); 
+        // Τα πραγματικά στατιστικά δίνουν πλέον διπλάσιους πόντους
+        baseScore += (details.bstReal / 1.5); 
 
+        // Ετοιμότητα (Αντικείμενα / Abilities)
         if (candidate.slot.ability) baseScore += 60;
         if (candidate.slot.nature) baseScore += 40;
         

@@ -1,13 +1,12 @@
-// --- team-ai.js : The Ultimate AI Algorithm (No Reordering Fix & Smart Draft) ---
+// --- team-ai.js : ENDGAME PvP MASTER AI (Coverage, Synergy, Stats & Roles) ---
 
 function autoRecommendTeam() {
-    // 1. Παίρνουμε όλα τα γεμάτα slots από το ρόστερ
     const pool = team.map((slot, i) => ({ slot, i, p: POKE.find(x => x.id === slot.pokemonId) })).filter(x => x.slot.pokemonId && x.p);
     
     if (pool.length === 0) { alert('Πρόσθεσε μερικά Pokémon στο ρόστερ σου πρώτα!'); return; }
     if (pool.length <= 6) { pool.forEach(x => x.slot.calc = true); saveTeam(); if (typeof renderTeamSlots === 'function') renderTeamSlots(); return; }
 
-    if (!confirm(`Βρέθηκαν ${pool.length} Pokémon. Το AI θα τα σαρώσει ΟΛΑ και θα βρει την απόλυτη 6άδα... Ξεκινάμε;`)) return;
+    if (!confirm(`Master Mode: Το AI θα σαρώσει Levels, Stats, Αμυντικές Συμμαχίες (Immunities) και Επιθετική Κάλυψη (Offensive Coverage) για την απόλυτη 6άδα. Ξεκινάμε;`)) return;
 
     // --- Βοηθητικές Συναρτήσεις ---
     const getNatureMultiplier = (nature, statName) => {
@@ -31,7 +30,6 @@ function autoRecommendTeam() {
     };
 
     const getRoleDetails = (slot, p) => {
-        // Fallbacks για να είμαστε 100% σίγουροι ότι βρίσκει τα Base Stats
         let bs = (typeof BASE_STATS !== 'undefined' && BASE_STATS[p.id]) ? BASE_STATS[p.id] : null;
         if (!bs && p.baseStats) bs = p.baseStats; 
         if (!bs && p.stats) bs = { hp: p.stats[0], atk: p.stats[1], def: p.stats[2], spa: p.stats[3], spd: p.stats[4], spe: p.stats[5] };
@@ -63,24 +61,19 @@ function autoRecommendTeam() {
         let details = getRoleDetails(candidate.slot, candidate.p);
         candidate.details = details;
 
-        // 🔥 ΤΕΡΑΣΤΙΟ ΜΠΟΝΟΥΣ ΣΤΟ LEVEL ΚΑΙ ΤΑ ΣΤΑΤΙΣΤΙΚΑ!
-        // Ένα Lvl 100 παίρνει 1500 πόντους, ένα Lvl 75 παίρνει 1125! (Τεράστια διαφορά 375 πόντων)
+        // Level is still King, but Stats matter immensely
         baseScore += (candidate.slot.level * 15); 
+        baseScore += (details.bstReal / 1.5); 
         
         let statKeys = ['HP', 'ATK', 'DEF', 'SPATK', 'SPDEF', 'SPD'];
         let totalEvs = statKeys.reduce((sum, stat) => sum + (Number(candidate.slot.ev?.[stat]) || 0), 0);
         baseScore += (totalEvs / 3); 
-        
         let totalIvs = statKeys.reduce((sum, stat) => sum + (Number(candidate.slot.iv?.[stat]) || 0), 0);
         baseScore += (totalIvs); 
-        
-        // Τα πραγματικά στατιστικά δίνουν πλέον διπλάσιους πόντους
-        baseScore += (details.bstReal / 1.5); 
 
-        // Ετοιμότητα (Αντικείμενα / Abilities)
+        // Items & Abilities
         if (candidate.slot.ability) baseScore += 60;
         if (candidate.slot.nature) baseScore += 40;
-        
         if (candidate.slot.item) {
             let item = candidate.slot.item.toLowerCase().replace(/[^a-z]/g, '');
             if (item === 'leftovers' || item === 'blacksludge') baseScore += (details.role === 'tank') ? 120 : 30;
@@ -93,16 +86,15 @@ function autoRecommendTeam() {
         let nMultAtk = getNatureMultiplier(candidate.slot.nature, 'ATK');
         let nMultSpa = getNatureMultiplier(candidate.slot.nature, 'SPATK');
 
+        // Move Quality Check
         (candidate.slot.moveNames || []).forEach(moveId => {
             if (!moveId) return;
             let moveData = null;
-            if (typeof MOVE_INFO !== 'undefined') {
-                moveData = MOVE_INFO[moveId] || MOVE_INFO[moveId.toLowerCase().replace(/\s+/g, '-')];
-            }
+            if (typeof MOVE_INFO !== 'undefined') moveData = MOVE_INFO[moveId] || MOVE_INFO[moveId.toLowerCase().replace(/\s+/g, '-')];
             if (!moveData) return;
             
             baseScore += 30; 
-            if (candidate.p.types.includes(moveData.type)) baseScore += 50; 
+            if (candidate.p.types.includes(moveData.type)) baseScore += 60; // STAB Bonus!
 
             if (moveData.cat === 'status') {
                 baseScore += 35;
@@ -114,27 +106,30 @@ function autoRecommendTeam() {
                     baseScore += (nMultSpa > 1) ? 40 : (nMultSpa < 1 ? -40 : 0);
                     baseScore += (details.rSpa >= details.rAtk) ? 40 : -50;
                 }
-                if (moveData.power >= 90) baseScore += 50;
-                else if (moveData.power >= 70) baseScore += 25;
+                if (moveData.power >= 90) baseScore += 60;
+                else if (moveData.power >= 70) baseScore += 30;
             }
         });
         candidate.baseScore = baseScore;
     });
 
     // ==========================================
-    // PHASE 2: AI Drafting Phase (Επιλογή με βάση τις ανάγκες)
+    // PHASE 2: AI Master Drafting (Coverage & Synergy)
     // ==========================================
     let bestTeam = [];
-    console.log("=== ΕΝΑΡΞΗ AI DRAFTING ===");
+    console.log("=== ΕΝΑΡΞΗ ENDGAME AI DRAFTING ===");
 
     while (bestTeam.length < 6 && bestTeam.length < pool.length) {
         let bestScore = -Infinity;
         let bestCandidate = null;
+        let logDetails = "";
 
         pool.filter(x => !bestTeam.includes(x)).forEach(candidate => {
             let currentScore = candidate.baseScore;
+            let tempLog = [];
 
             if (bestTeam.length > 0) {
+                // 1. DEFENSIVE SYNERGY & IMMUNITIES
                 let teamWeaknesses = {};
                 if(typeof AT !== 'undefined') AT.forEach(t => teamWeaknesses[t] = 0);
                 
@@ -149,33 +144,50 @@ function autoRecommendTeam() {
                 if(typeof AT !== 'undefined') AT.forEach(t => {
                     let cMult = typeof getDynamicMult !== 'undefined' ? getDynamicMult(t, candidate.p.types, candidate.slot.ability) : multAtkVsTypes(t, candidate.p.types);
                     if (teamWeaknesses[t] >= 2) { 
-                        if (cMult <= 0.5 && cMult > 0) currentScore += 180;
-                        if (cMult === 0) currentScore += 350; // ΜΑΖΙΚΟ ΜΠΟΝΟΥΣ ΑΝΟΣΙΑΣ (π.χ. Levitate)
-                        if (cMult >= 2) currentScore -= 200;
+                        if (cMult <= 0.5 && cMult > 0) { currentScore += 180; tempLog.push(`Resists ${t} (+180)`); }
+                        if (cMult === 0) { currentScore += 400; tempLog.push(`IMMUNITY to ${t} (+400!)`); } // MASTER LEVEL IMMUNITY
+                        if (cMult >= 2) { currentScore -= 200; tempLog.push(`Shares ${t} Weakness (-200)`); }
                     } else if (teamWeaknesses[t] === 1) {
                         if (cMult <= 0.5 && cMult > 0) currentScore += 90;
-                        if (cMult === 0) currentScore += 180;
+                        if (cMult === 0) currentScore += 200;
                         if (cMult >= 2) currentScore -= 100;
                     }
                 });
 
-                let teamMoveTypes = new Set(bestTeam.flatMap(m => m.slot.moves).filter(x => x));
-                candidate.slot.moves.filter(m => m).forEach(mt => {
-                    if (!teamMoveTypes.has(mt)) currentScore += 50; 
+                // 2. OFFENSIVE COVERAGE ENGINE (NEW!)
+                let teamCoverage = new Set();
+                bestTeam.forEach(m => {
+                    (m.slot.moveNames || []).forEach(moveId => {
+                        let md = typeof MOVE_INFO !== 'undefined' ? (MOVE_INFO[moveId] || MOVE_INFO[moveId.toLowerCase().replace(/\s+/g, '-')]) : null;
+                        if (md && md.power > 0) teamCoverage.add(md.type);
+                    });
                 });
 
+                (candidate.slot.moveNames || []).forEach(moveId => {
+                    let md = typeof MOVE_INFO !== 'undefined' ? (MOVE_INFO[moveId] || MOVE_INFO[moveId.toLowerCase().replace(/\s+/g, '-')]) : null;
+                    if (md && md.power > 0) {
+                        if (!teamCoverage.has(md.type)) {
+                            currentScore += 120; // Τεράστιο μπόνους αν φέρνει επίθεση που λείπει από την ομάδα!
+                            tempLog.push(`New Coverage: ${md.type.toUpperCase()} (+120)`);
+                        } else {
+                            currentScore += 10; // Μικρό μπόνους αν η ομάδα έχει ήδη αυτόν τον τύπο επίθεσης
+                        }
+                    }
+                });
+
+                // 3. ROLE BALANCE
                 let teamRoles = bestTeam.map(m => m.details.role);
                 let tanks = teamRoles.filter(r => r === 'tank').length;
                 let phys = teamRoles.filter(r => r === 'physical').length;
                 let spec = teamRoles.filter(r => r === 'special').length;
 
-                if (candidate.details.role === 'tank' && tanks === 0) currentScore += 150; 
-                if (candidate.details.role === 'physical' && phys === 0) currentScore += 150; 
-                if (candidate.details.role === 'special' && spec === 0) currentScore += 150; 
+                if (candidate.details.role === 'tank' && tanks === 0) { currentScore += 200; tempLog.push("Needs Tank (+200)"); }
+                if (candidate.details.role === 'physical' && phys === 0) { currentScore += 200; tempLog.push("Needs Phys (+200)"); }
+                if (candidate.details.role === 'special' && spec === 0) { currentScore += 200; tempLog.push("Needs Spec (+200)"); }
                 
-                if (candidate.details.role === 'tank' && tanks >= 2) currentScore -= 50; 
-                if (candidate.details.role === 'physical' && phys >= 3) currentScore -= 50; 
-                if (candidate.details.role === 'special' && spec >= 3) currentScore -= 50; 
+                if (candidate.details.role === 'tank' && tanks >= 2) currentScore -= 100; 
+                if (candidate.details.role === 'physical' && phys >= 3) currentScore -= 100; 
+                if (candidate.details.role === 'special' && spec >= 3) currentScore -= 100; 
             }
 
             // Assassin Mode Check
@@ -186,18 +198,19 @@ function autoRecommendTeam() {
             if (currentScore > bestScore) {
                 bestScore = currentScore;
                 bestCandidate = candidate;
+                logDetails = tempLog.join(' | ');
             }
         });
 
         if(bestCandidate) {
             bestTeam.push(bestCandidate);
-            console.log(`Επιλέχθηκε: ${bestCandidate.p.name} (Σκορ: ${Math.floor(bestScore)})`);
+            console.log(`✅ SLOT #${bestTeam.length}: ${bestCandidate.p.name} | Total Score: ${Math.floor(bestScore)}`);
+            if (logDetails) console.log(`   -> Tactics: ${logDetails}`);
         }
     }
 
     // ==========================================
-    // PHASE 3: THE FIX - Καμία αναδιάταξη της λίστας!
-    // Απλά ανάβουμε τον διακόπτη (calc = true) για τους νικητές
+    // PHASE 3: Εφαρμογή (Χωρίς Αναδιάταξη!)
     // ==========================================
     pool.forEach(x => {
         x.slot.calc = bestTeam.includes(x);
@@ -207,5 +220,5 @@ function autoRecommendTeam() {
     if (typeof renderTeamSlots === 'function') renderTeamSlots();
     
     let teamNames = bestTeam.map(x => x.p.name).join(', ');
-    alert(`🏆 Η Ιδανική 6άδα επιλέχθηκε!\n\n${teamNames}\n\nΤο AI σκάναρε ΟΛΑ τα Pokémon σου και άναψε το "In calculate" στους νικητές, όπου κι αν βρίσκονται στη λίστα!`);
+    alert(`🏆 Η Ιδανική 6άδα επιλέχθηκε!\n\n${teamNames}\n\nΤο AI σκάναρε Immunities, Offensive Coverage, Natures και Base Stats! Άνοιξε την Κονσόλα (F12) για να δεις ακριβώς ΓΙΑΤΙ διαλέχτηκε το καθένα!`);
 }

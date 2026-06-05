@@ -1,20 +1,21 @@
-// --- team-ai.js : Εξελιγμένος Αλγόριθμος AI (Competitive VGC/Singles Optimizer με Move Intelligence & Assassin Mode) ---
+// --- team-ai.js : Εξελιγμένος Αλγόριθμος AI (Competitive VGC/Singles Optimizer με Move, Item & Ability Intelligence) ---
 
 function autoRecommendTeam() {
-    const pool = team.map((slot, i) => ({ slot, i, p: POKE.find(x => x.id === slot.pokemonId) })).filter(x => x.slot.pokemonId);
+    const pool = team.map((slot, i) => ({ slot, i, p: POKE.find(x => x.id === slot.pokemonId) })).filter(x => x.slot.pokemonId && x.p);
     
     if (pool.length === 0) { alert('Πρόσθεσε μερικά Pokémon στο ρόστερ σου πρώτα!'); return; }
     if (pool.length <= 6) { pool.forEach(x => x.slot.calc = true); saveTeam(); if (typeof renderTeamSlots === 'function') renderTeamSlots(); return; }
 
-    if (!confirm(`Βρέθηκαν ${pool.length} Pokémon στο ρόστερ. Το AI θα αναλύσει Stats, EVs, Επιθέσεις και θα προσαρμοστεί στους αντιπάλους (αν υπάρχουν). Ξεκινάμε;`)) return;
+    if (!confirm(`Βρέθηκαν ${pool.length} Pokémon. Το AI θα αναλύσει Abilities, Items, Stats και Συνέργειες για να χτίσει την ιδανική 6άδα. Ξεκινάμε;`)) return;
 
     let bestTeam = [];
 
+    // Διορθωμένο Λεξικό Natures (Καλύπτει πλέον και τα 20 Natures)
     const getNatureMultiplier = (nature, statName) => {
         if (!nature) return 1;
         const n = nature.toLowerCase();
-        const buffs = { adamant: 'ATK', bold: 'DEF', impish: 'DEF', timid: 'SPD', jolly: 'SPD', modest: 'SPATK', mild: 'SPATK', quiet: 'SPATK', calm: 'SPDEF', careful: 'SPDEF', sassy: 'SPDEF', brave: 'ATK', naughty: 'ATK', rash: 'SPATK', lax: 'DEF', naive: 'SPD', hasty: 'SPD' };
-        const nerfs = { adamant: 'SPATK', bold: 'ATK', impish: 'SPATK', timid: 'ATK', jolly: 'SPATK', modest: 'ATK', mild: 'DEF', quiet: 'SPD', calm: 'ATK', careful: 'SPATK', sassy: 'SPD', brave: 'SPD', naughty: 'SPDEF', rash: 'SPDEF', lax: 'SPDEF', naive: 'SPDEF', hasty: 'DEF' };
+        const buffs = { adamant: 'ATK', brave: 'ATK', lonely: 'ATK', naughty: 'ATK', bold: 'DEF', impish: 'DEF', lax: 'DEF', relaxed: 'DEF', modest: 'SPATK', mild: 'SPATK', quiet: 'SPATK', rash: 'SPATK', calm: 'SPDEF', gentle: 'SPDEF', sassy: 'SPDEF', careful: 'SPDEF', timid: 'SPD', jolly: 'SPD', hasty: 'SPD', naive: 'SPD' };
+        const nerfs = { adamant: 'SPATK', brave: 'SPD', lonely: 'DEF', naughty: 'SPDEF', bold: 'ATK', impish: 'SPATK', lax: 'SPDEF', relaxed: 'SPD', modest: 'ATK', mild: 'DEF', quiet: 'SPD', rash: 'SPDEF', calm: 'ATK', gentle: 'DEF', sassy: 'SPD', careful: 'SPATK', timid: 'ATK', jolly: 'SPATK', hasty: 'DEF', naive: 'SPDEF' };
         
         if (buffs[n] === statName) return 1.1;
         if (nerfs[n] === statName) return 0.9;
@@ -50,53 +51,67 @@ function autoRecommendTeam() {
         else if (rAtk > rSpa * 1.15) role = 'physical';
         else if (rSpa > rAtk * 1.15) role = 'special';
 
-        return { role, bstReal, rAtk, rSpa, bulk };
+        return { role, bstReal, rAtk, rSpa, bulk, rSpe };
     };
 
     while (bestTeam.length < 6 && bestTeam.length < pool.length) {
         let bestScore = -Infinity, bestCandidate = null;
-        console.log(`\n--- ΑΞΙΟΛΟΓΗΣΗ ΓΙΑ ΤΟ SLOT #${bestTeam.length + 1} ---`);
 
         pool.filter(x => !bestTeam.includes(x)).forEach(candidate => {
             let score = 0;
             let cTypes = candidate.p.types;
             let details = getRoleDetails(candidate.slot, candidate.p);
 
-            // 1. ΕΤΟΙΜΟΤΗΤΑ PvP
-            if (candidate.slot.item) score += 60; 
+            // 1. ΕΤΟΙΜΟΤΗΤΑ PvP & ITEM INTELLIGENCE
             if (candidate.slot.ability) score += 40;
             if (candidate.slot.nature) score += 30;
             
+            if (candidate.slot.item) {
+                let item = candidate.slot.item.toLowerCase().replace(/[^a-z]/g, '');
+                if (item === 'leftovers' || item === 'blacksludge') {
+                    score += (details.role === 'tank') ? 90 : 20; // Τα Tanks κερδίζουν τεράστιο μπόνους!
+                } else if (item.includes('choice')) {
+                    if (item === 'choiceband' && details.role === 'physical') score += 90;
+                    else if (item === 'choicespecs' && details.role === 'special') score += 90;
+                    else if (item === 'choicescarf' && details.rSpe > 80) score += 90;
+                } else if (item === 'focussash' || item === 'lifeorb') {
+                    score += (details.role !== 'tank') ? 80 : 10;
+                } else if (item === 'assaultvest') {
+                    score += (details.role === 'tank' || details.rAtk > 100 || details.rSpa > 100) ? 70 : 10;
+                } else {
+                    score += 50;
+                }
+            }
+            
             let totalEvs = TEAM_STATS.reduce((sum, stat) => sum + (Number(candidate.slot.ev[stat]) || 0), 0);
-            if (totalEvs >= 500) score += 80; 
-            else if (totalEvs > 0) score += (totalEvs / 10); 
+            if (totalEvs >= 500) score += 80; else if (totalEvs > 0) score += (totalEvs / 10); 
 
-            // 2. MOVE INTELLIGENCE
-            let validMovesCount = 0;
+            // 2. MOVE INTELLIGENCE (Με Ασφάλεια Ονομάτων)
             let nMultAtk = getNatureMultiplier(candidate.slot.nature, 'ATK');
             let nMultSpa = getNatureMultiplier(candidate.slot.nature, 'SPATK');
 
             (candidate.slot.moveNames || []).forEach(moveId => {
                 if (!moveId) return;
-                let moveData = (typeof MOVE_INFO !== 'undefined') ? MOVE_INFO[moveId] : null;
+                
+                // Διορθωμένο: Ψάχνει το κανονικό ΚΑΙ το "καθαρό" όνομα (με παύλες)
+                let moveData = null;
+                if (typeof MOVE_INFO !== 'undefined') {
+                    moveData = MOVE_INFO[moveId] || MOVE_INFO[moveId.toLowerCase().replace(/\s+/g, '-')];
+                }
                 if (!moveData) return;
 
-                validMovesCount++;
                 score += 15; 
-
                 if (cTypes.includes(moveData.type)) score += 35; 
 
                 if (moveData.cat === 'status') {
                     score += 25; 
                 } else {
                     if (moveData.cat === 'physical') {
-                        if (nMultAtk > 1) score += 25; 
-                        else if (nMultAtk < 1) score -= 40; 
-                        if (details.rAtk >= details.rSpa) score += 20; else score -= 30; 
+                        if (nMultAtk > 1) score += 25; else if (nMultAtk < 1) score -= 40; 
+                        score += (details.rAtk >= details.rSpa) ? 20 : -30; 
                     } else if (moveData.cat === 'special') {
-                        if (nMultSpa > 1) score += 25; 
-                        else if (nMultSpa < 1) score -= 40; 
-                        if (details.rSpa >= details.rAtk) score += 20; else score -= 30; 
+                        if (nMultSpa > 1) score += 25; else if (nMultSpa < 1) score -= 40; 
+                        score += (details.rSpa >= details.rAtk) ? 20 : -30; 
                     }
                     if (moveData.power >= 90) score += 25; 
                     else if (moveData.power >= 70) score += 10; 
@@ -110,36 +125,31 @@ function autoRecommendTeam() {
             // 3. ΩΜΑ ΣΤΑΤΙΣΤΙΚΑ
             score += (details.bstReal / 10);
 
-            if (bestTeam.length === 0) {
-                if (score > bestScore) { bestScore = score; bestCandidate = candidate; }
-                return; 
-            }
-
-            // 4. ΑΜΥΝΤΙΚΗ ΣΥΝΟΧΗ & ASSASSIN MODE
-            if (window.oppTeam && window.oppTeam.length > 0 && window.calcAssassinScore) {
-                // ASSASSIN MODE: Το AI καλεί τη συνάρτηση από το team-opp.js
+            // 4. ΑΜΥΝΤΙΚΗ ΣΥΝΟΧΗ & ABILITY INTELLIGENCE (Levitate, κλπ)
+            if (window.oppTeam && window.oppTeam.length > 0 && typeof window.calcAssassinScore === 'function') {
                 score += window.calcAssassinScore(candidate);
-            } else {
-                // NORMAL MODE: Το κλασικό Synergy που είχαμε ήδη
+            } else if (bestTeam.length > 0) {
                 let teamWeaknesses = {};
                 AT.forEach(t => teamWeaknesses[t] = 0);
+                
+                // Χρησιμοποιεί το getDynamicMult για να διαβάσει τα Abilities της ομάδας!
                 bestTeam.forEach(member => {
                     AT.forEach(t => {
-                        let mult = multAtkVsTypes(t, member.p.types);
+                        let mult = typeof getDynamicMult !== 'undefined' ? getDynamicMult(t, member.p.types, member.slot.ability) : multAtkVsTypes(t, member.p.types);
                         if (mult >= 2) teamWeaknesses[t] += 1; 
                         if (mult <= 0.5) teamWeaknesses[t] -= 1; 
                     });
                 });
 
                 AT.forEach(t => {
-                    let cMult = multAtkVsTypes(t, cTypes);
+                    let cMult = typeof getDynamicMult !== 'undefined' ? getDynamicMult(t, cTypes, candidate.slot.ability) : multAtkVsTypes(t, cTypes);
                     if (teamWeaknesses[t] >= 2) { 
                         if (cMult <= 0.5 && cMult > 0) score += 120; 
-                        if (cMult === 0) score += 200; 
+                        if (cMult === 0) score += 250; // ΜΑΖΙΚΟ ΜΠΟΝΟΥΣ ΓΙΑ ΑΝΟΣΙΑ (π.χ. Levitate)!
                         if (cMult >= 2) score -= 150; 
                     } else if (teamWeaknesses[t] === 1) {
                         if (cMult <= 0.5 && cMult > 0) score += 60; 
-                        if (cMult === 0) score += 100; 
+                        if (cMult === 0) score += 120; 
                         if (cMult >= 2) score -= 60; 
                     }
                 });
@@ -165,13 +175,10 @@ function autoRecommendTeam() {
             if (details.role === 'special' && spec >= 2) score -= 60;  
             if (details.role === 'tank' && tanks >= 3) score -= 80; 
 
-            console.log(`[Score: ${Math.floor(score)}] ${candidate.p.name} | Role: ${details.role}`);
-
             if (score > bestScore) { bestScore = score; bestCandidate = candidate; }
         });
         
-        console.log(`>>> ΕΠΙΛΟΓΗ SLOT #${bestTeam.length + 1}: ${bestCandidate.p.name} <<<`);
-        bestTeam.push(bestCandidate);
+        if(bestCandidate) bestTeam.push(bestCandidate);
     }
 
     // --- Ολοκλήρωση & Αναδιάταξη ---
@@ -184,5 +191,6 @@ function autoRecommendTeam() {
     saveTeam(); 
     if (typeof renderTeamSlots === 'function') renderTeamSlots();
     
-    alert('🏆 Ομάδα έτοιμη! Ο αλγόριθμος ανέλυσε τα δεδομένα (Target Mode ή Normal Mode) και έχτισε την ιδανική 6άδα.');
+    let teamNames = bestTeam.map(x => x.p.name).join(', ');
+    alert(`🏆 Ομάδα έτοιμη!\n\nΤο AI υπολόγισε τα Abilities (π.χ. Levitate), τα Held Items, τα Natures και το Synergy.\n\nΕπιλέχθηκαν: ${teamNames}`);
 }

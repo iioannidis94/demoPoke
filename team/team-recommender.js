@@ -1,4 +1,4 @@
-// --- team-recommender.js : Move Optimizer & AI Recommendations ---
+// --- team-recommender.js : Smart Move Optimizer V2 (Coverage & Equipped Tracking) ---
 
 window.showMoveRecommendations = function() {
     const selected = typeof calcTeam === 'function' ? calcTeam() : [];
@@ -11,7 +11,7 @@ window.showMoveRecommendations = function() {
         <div style="background:var(--bg); border:2px solid #4dabf7; border-radius:12px; max-width:850px; width:100%; max-height:90vh; overflow-y:auto; padding:25px; position:relative; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
             <button onclick="document.getElementById('moveRecModal').remove()" style="position:absolute; top:15px; right:15px; background:#ff4d4f; color:white; border:none; padding:8px 15px; border-radius:6px; cursor:pointer; font-weight:bold; font-size:14px; transition:0.2s;">❌ Κλείσιμο</button>
             <h2 style="color:#4dabf7; margin-top:0; font-size:22px;">💡 Master Move Optimizer</h2>
-            <p style="font-size:14px; opacity:0.8; margin-bottom:20px;">Το AI ανέλυσε τα Base Stats, το Type και τον Ρόλο των Pokémon που έχεις στον Calculator και προτείνει τις 6 κορυφαίες επιθέσεις για το καθένα. Επίλεξε 4 από αυτές για το τέλειο Moveset!</p>
+            <p style="font-size:14px; opacity:0.8; margin-bottom:20px;">Το AI αναλύει τώρα την <strong>Επιθετική Ποικιλία (Coverage)</strong>. Δεν θα σου προτείνει ποτέ 2 ίδιους τύπους επιθέσεων, ενώ δίνει προτεραιότητα στα STAB και τα Elite Status Moves!</p>
             <div style="display:flex; flex-direction:column; gap:15px;">`;
 
     selected.forEach(x => {
@@ -58,12 +58,12 @@ window.showMoveRecommendations = function() {
                 else if (isPhysical) { score -= 100; } 
                 else { score += 20; }
             } else if (mInfo.cat === 'status') {
-                let eliteStatus = ['toxic', 'recover', 'roost', 'swords-dance', 'nasty-plot', 'dragon-dance', 'stealth-rock', 'spikes', 'will-o-wisp', 'thunder-wave', 'protect', 'leech-seed', 'spore', 'calm-mind'];
+                let eliteStatus = ['toxic', 'recover', 'roost', 'swords-dance', 'nasty-plot', 'dragon-dance', 'stealth-rock', 'spikes', 'will-o-wisp', 'thunder-wave', 'protect', 'leech-seed', 'spore', 'calm-mind', 'defog', 'rapid-spin'];
                 if (eliteStatus.includes(cleanName)) {
-                    score += 90;
+                    score += 150; // ΤΕΡΑΣΤΙΟ ΜΠΟΝΟΥΣ στα Elite Status!
                     reasons.push('🛡️ Elite Utility');
                 } else {
-                    score += 10; 
+                    score += 20; 
                 }
             }
 
@@ -81,19 +81,52 @@ window.showMoveRecommendations = function() {
             }
         });
 
+        // Σορτάρισμα βάσει σκορ
         scoredMoves.sort((a,b) => b.score - a.score);
-        let topMoves = scoredMoves.slice(0, 6);
+
+        // --- SMART DIVERSITY ENGINE ---
+        let topMoves = [];
+        let coveredTypes = new Set();
+        let statusCount = 0;
+
+        for (let m of scoredMoves) {
+            if (topMoves.length >= 6) break;
+
+            if (m.info.cat !== 'status') {
+                // Αν έχουμε ήδη βάλει επίθεση που κάνει ζημιά αυτού του τύπου, την προσπερνάμε! (Για τέλειο Coverage)
+                if (coveredTypes.has(m.info.type)) continue;
+                
+                coveredTypes.add(m.info.type);
+                topMoves.push(m);
+            } else {
+                // Θέλουμε μάξιμουμ 2 Status moves στις προτάσεις
+                if (statusCount >= 2) continue; 
+                statusCount++;
+                topMoves.push(m);
+            }
+        }
+
+        // Αν μετά το φιλτράρισμα δεν φτάσαμε τις 6, γεμίζουμε με τις επόμενες καλύτερες
+        if (topMoves.length < 6) {
+            let remaining = scoredMoves.filter(m => !topMoves.includes(m));
+            topMoves.push(...remaining.slice(0, 6 - topMoves.length));
+        }
+        // ------------------------------
 
         let roleText = isPhysical ? 'Physical Attacker' : (isSpecial ? 'Special Attacker' : 'Mixed Attacker');
-        
-        // Φτιάχνουμε τα κουτάκια των επιθέσεων με ασφάλεια
+        let currentMoves = x.slot.moveNames || []; // Παίρνει τις επιθέσεις που του έχεις ήδη βάλει!
+
         let movesHtml = topMoves.length ? topMoves.map(m => {
             let color = typeof TC !== 'undefined' ? TC[m.info.type] : '#888';
             let isStatus = m.info.cat === 'status';
+            let isEquipped = currentMoves.includes(m.name); // Έλεγχος αν την έχεις
+            
             let statsHtml = isStatus ? 'Type: Status' : `Pwr: <b style="color:white">${m.info.power}</b> | Acc: <b style="color:white">${m.info.acc}</b>`;
             let reasonsHtml = m.reasons.length ? `<span style="font-size:11px; color:#4dabf7; margin-top:4px; font-weight:bold;">${m.reasons.join(', ')}</span>` : '';
-            
-            return `<div style="border-left: 4px solid ${color}; padding:8px 12px; background:var(--bg); border-radius:6px; font-size:13px; display:flex; flex-direction:column; min-width:140px; box-shadow:0 2px 5px rgba(0,0,0,0.2);">
+            let equippedHtml = isEquipped ? `<span style="background:#2b8a3e; color:white; font-size:10px; padding:2px 5px; border-radius:4px; margin-bottom:6px; display:inline-block; align-self:flex-start; font-weight:bold;">✔️ Equipped</span>` : '';
+
+            return `<div style="border-left: 4px solid ${color}; padding:10px 12px; background:var(--bg); border-radius:6px; font-size:13px; display:flex; flex-direction:column; min-width:140px; box-shadow:0 2px 5px rgba(0,0,0,0.2);">
+                ${equippedHtml}
                 <strong style="color:${color}; font-size:14px; text-transform:capitalize;">${m.name.replace(/-/g, ' ')}</strong>
                 <span style="opacity:0.8; font-family:monospace; margin-top:5px; font-size:11px;">
                     ${statsHtml}

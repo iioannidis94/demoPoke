@@ -1,4 +1,4 @@
-// --- team-recommender.js : Smart Move Optimizer V2 (Coverage & Equipped Tracking) ---
+// --- team-recommender.js : Smart Move Optimizer V2 (Coverage & Equipped Tracking) --- 
 
 window.showMoveRecommendations = function() {
     const selected = typeof calcTeam === 'function' ? calcTeam() : [];

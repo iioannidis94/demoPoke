@@ -203,6 +203,7 @@ function autoRecommendTeam() {
         });
 
         if(bestCandidate) {
+            bestCandidate.slot.aiScore = Math.floor(bestScore); // Αποθηκεύει το σκορ στο DNA του slot!
             bestTeam.push(bestCandidate);
             console.log(`✅ SLOT #${bestTeam.length}: ${bestCandidate.p.name} | Total Score: ${Math.floor(bestScore)}`);
             if (logDetails) console.log(`   -> Tactics: ${logDetails}`);

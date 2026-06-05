@@ -96,11 +96,12 @@ function calcPanel() {
     const chips = list => list.length ? list.map(x => tb(x.t || x, 'calcBadge')).join('') : '<span class="calcNone">none</span>'; 
     const threatHtml = threats.length ? threats.slice(0, 10).map(x => `<span class="calcThreat" style="border-color:${TC[x.t] || '#888'}"><span style="background:${TC[x.t] || '#888'}">${x.t}</span>${x.count} weak${x.max >= 4 ? ` · x${x.max}` : ''}</span>`).join('') : '<span class="calcNone">No obvious type weaknesses.</span>'; 
     
-    const selectedHtml = `<div class="calcSelected" style="display:flex; flex-wrap:wrap; justify-content:center; gap:12px; margin: 15px 0;">
+const selectedHtml = `<div class="calcSelected" style="display:flex; flex-wrap:wrap; justify-content:center; gap:12px; margin: 15px 0;">
         ${selected.map(x => `
             <div style="display:flex; flex-direction:column; align-items:center; background:var(--bg); border:1px solid var(--brd); border-radius:8px; padding:8px; min-width:70px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
                 ${spriteImg(x.p)}
                 <span style="font-size:11px; font-weight:bold; margin-top:6px; color:var(--txt); text-align:center;">${x.p.name.replace(/-/g, ' ')}</span>
+                ${x.slot.aiScore ? `<span style="font-size:10px; color:#ffc107; background:rgba(255,193,7,0.1); padding:3px 6px; border-radius:8px; margin-top:5px; border:1px solid rgba(255,193,7,0.3); font-weight:bold;" title="AI Draft Score">🏆 ${x.slot.aiScore}</span>` : ''}
             </div>
         `).join('')}
     </div>`;

@@ -807,6 +807,306 @@ const MOVE_INFO = {
     "hard-press": { "type": "steel", "cat": "physical", "power": 0, "acc": 100 },
     "dragon-cheer": { "type": "dragon", "cat": "status", "power": 0, "acc": 0 },
     "megahorn": { "type": "bug", "cat": "physical", "power": 120, "acc": 85 },
-    "malignant-chain": { "type": "poison", "cat": "special", "power": 100, "acc": 100 }
+    "malignant-chain": { "type": "poison", "cat": "special", "power": 100, "acc": 100 },
+    "body-press": { "type": "fighting", "cat": "physical", "power": 80, "acc": 100 }
     
   };
+
+
+  
+// Supplement: extra competitive metadata for moves
+// priority: integer priority bracket (0 = normal, +1/+2/+3 = faster, -1/-2/-3/-6/-7 = slower)
+// contact: true if the move makes contact (triggers Rocky Helmet, Rough Skin, etc.)
+// multiHit: { min, max } number of hits (e.g. Bullet Seed = {min:2,max:5})
+// recoil: fraction of damage dealt taken as recoil (e.g. 0.33 = 33%)
+// selfRecoil: fraction of user's max HP taken as recoil (used by Head Smash etc.)
+// drain: fraction of damage dealt healed (e.g. 0.5 = Leech Life)
+// twoTurn: true if move takes two turns (Fly, Dig, Solar Beam etc.)
+// highCrit: true if move has a raised critical hit ratio
+const MOVE_FLAGS = {
+    // ---- Priority moves ----
+    'fake-out':       { priority: 3, contact: true },
+    'helping-hand':   { priority: 5 },
+    'follow-me':      { priority: 2 },
+    'rage-powder':    { priority: 2 },
+    'baneful-bunker': { priority: 4 },
+    'kings-shield':   { priority: 4 },
+    'spiky-shield':   { priority: 4 },
+    'crafty-shield':  { priority: 3 },
+    'detect':         { priority: 4 },
+    'protect':        { priority: 4 },
+    'wide-guard':     { priority: 3 },
+    'quick-guard':    { priority: 3 },
+    'endure':         { priority: 4 },
+    'feint':          { priority: 2 },
+    'quick-attack':   { priority: 1, contact: true },
+    'mach-punch':     { priority: 1, contact: true },
+    'bullet-punch':   { priority: 1, contact: true },
+    'ice-shard':      { priority: 1 },
+    'shadow-sneak':   { priority: 1, contact: true },
+    'aqua-jet':       { priority: 1, contact: true },
+    'sucker-punch':   { priority: 1, contact: true },
+    'vacuum-wave':    { priority: 1 },
+    'water-shuriken': { priority: 1, multiHit: { min: 2, max: 5 } },
+    'accelerock':     { priority: 1, contact: true },
+    'first-impression': { priority: 2, contact: true },
+    'grassy-glide':   { priority: 1, contact: true },
+    'jet-punch':      { priority: 1, contact: true },
+    'extreme-speed':  { priority: 2, contact: true },
+    'after-you':      { priority: 0 },
+    'trick-room':     { priority: -7 },
+    'roar':           { priority: -6 },
+    'dragon-tail':    { priority: -6, contact: true },
+    'circle-throw':   { priority: -6, contact: true },
+    'teleport':       { priority: -6 },
+    'whirlwind':      { priority: -6 },
+    // ---- Two-turn moves ----
+    'fly':            { twoTurn: true, contact: true },
+    'dig':            { twoTurn: true, contact: true },
+    'dive':           { twoTurn: true, contact: true },
+    'bounce':         { twoTurn: true, contact: true },
+    'sky-drop':       { twoTurn: true, contact: true },
+    'solar-beam':     { twoTurn: true },
+    'solar-blade':    { twoTurn: true, contact: true },
+    'skull-bash':     { twoTurn: true, contact: true },
+    'sky-attack':     { twoTurn: true, highCrit: true },
+    'razor-wind':     { twoTurn: true },
+    'freeze-shock':   { twoTurn: true },
+    'ice-burn':       { twoTurn: true },
+    'phantom-force':  { twoTurn: true, contact: true },
+    'shadow-force':   { twoTurn: true, contact: true },
+    'geomancy':       { twoTurn: true },
+    'meteor-beam':    { twoTurn: true },
+    'electro-shot':   { twoTurn: true },
+    // ---- Multi-hit moves ----
+    'bullet-seed':       { multiHit: { min: 2, max: 5 } },
+    'icicle-spear':      { multiHit: { min: 2, max: 5 } },
+    'rock-blast':        { multiHit: { min: 2, max: 5 } },
+    'pin-missile':       { multiHit: { min: 2, max: 5 } },
+    'tail-slap':         { multiHit: { min: 2, max: 5 } },
+    'scale-shot':        { multiHit: { min: 2, max: 5 }, contact: true },
+    'arm-thrust':        { multiHit: { min: 2, max: 5 }, contact: true },
+    'fury-attack':       { multiHit: { min: 2, max: 5 }, contact: true },
+    'fury-swipes':       { multiHit: { min: 2, max: 5 }, contact: true },
+    'comet-punch':       { multiHit: { min: 2, max: 5 }, contact: true },
+    'double-hit':        { multiHit: { min: 2, max: 2 }, contact: true },
+    'double-kick':       { multiHit: { min: 2, max: 2 }, contact: true },
+    'dual-chop':         { multiHit: { min: 2, max: 2 }, contact: true },
+    'dual-wingbeat':     { multiHit: { min: 2, max: 2 }, contact: true },
+    'gear-grind':        { multiHit: { min: 2, max: 2 }, contact: true },
+    'bonemerang':        { multiHit: { min: 2, max: 2 } },
+    'double-iron-bash':  { multiHit: { min: 2, max: 2 }, contact: true },
+    'surging-strikes':   { multiHit: { min: 3, max: 3 }, contact: true },
+    'triple-kick':       { multiHit: { min: 3, max: 3 }, contact: true },
+    'triple-axel':       { multiHit: { min: 3, max: 3 }, contact: true },
+    'population-bomb':   { multiHit: { min: 1, max: 10 }, contact: true },
+    'twineedle':         { multiHit: { min: 2, max: 2 } },
+    // ---- Recoil moves (fraction of damage dealt) ----
+    'take-down':      { recoil: 0.25, contact: true },
+    'submission':     { recoil: 0.25, contact: true },
+    'double-edge':    { recoil: 0.33, contact: true },
+    'brave-bird':     { recoil: 0.33, contact: true },
+    'flare-blitz':    { recoil: 0.33, contact: true },
+    'head-smash':     { recoil: 0.5, contact: true },
+    'high-jump-kick': { recoil: 0, contact: true }, // crash if misses
+    'jump-kick':      { recoil: 0, contact: true },
+    'volt-tackle':    { recoil: 0.33, contact: true },
+    'wild-charge':    { recoil: 0.25, contact: true },
+    'wood-hammer':    { recoil: 0.33, contact: true },
+    'head-charge':    { recoil: 0.25, contact: true },
+    'chloroblast':    { recoil: 0 }, // costs half user HP
+    'steel-beam':     { recoil: 0 }, // costs half user HP
+    // ---- Drain moves (fraction of damage dealt healed) ----
+    'absorb':         { drain: 0.5 },
+    'mega-drain':     { drain: 0.5 },
+    'giga-drain':     { drain: 0.5 },
+    'leech-life':     { drain: 0.5, contact: true },
+    'drain-punch':    { drain: 0.5, contact: true },
+    'horn-leech':     { drain: 0.5, contact: true },
+    'oblivion-wing':  { drain: 0.75 },
+    'parabolic-charge': { drain: 0.5 },
+    'bouncy-bubble':  { drain: 0.5, contact: true },
+    'strength-sap':   { drain: 0 }, // heals based on opponent ATK
+    // ---- High critical hit ratio ----
+    'slash':          { highCrit: true, contact: true },
+    'night-slash':    { highCrit: true, contact: true },
+    'psycho-cut':     { highCrit: true },
+    'stone-edge':     { highCrit: true },
+    'shadow-claw':    { highCrit: true, contact: true },
+    'cross-poison':   { highCrit: true, contact: true },
+    'karate-chop':    { highCrit: true, contact: true },
+    'razor-leaf':     { highCrit: true },
+    'crabhammer':     { highCrit: true, contact: true },
+    'spacial-rend':   { highCrit: true },
+    'leaf-blade':     { highCrit: true, contact: true },
+    'air-cutter':     { highCrit: true },
+    'aeroblast':      { highCrit: true },
+    'attack-order':   { highCrit: true },
+    'blaze-kick':     { highCrit: true, contact: true },
+    'dire-claw':      { highCrit: true, contact: true },
+    // ---- Contact moves (physical moves that make contact) ----
+    'pound':          { contact: true },
+    'scratch':        { contact: true },
+    'vice-grip':      { contact: true },
+    'bite':           { contact: true },
+    'headbutt':       { contact: true },
+    'horn-attack':    { contact: true },
+    'tackle':         { contact: true },
+    'body-slam':      { contact: true },
+    'wrap':           { contact: true },
+    'thrash':         { contact: true },
+    'low-kick':       { contact: true },
+    'fire-punch':     { contact: true },
+    'ice-punch':      { contact: true },
+    'thunder-punch':  { contact: true },
+    'cut':            { contact: true },
+    'wing-attack':    { contact: true },
+    'slam':           { contact: true },
+    'strength':       { contact: true },
+    'stomp':          { contact: true },
+    'rolling-kick':   { contact: true },
+    'mega-punch':     { contact: true },
+    'pay-day':        { contact: true },
+    'bind':           { contact: true },
+    'vine-whip':      { contact: true },
+    'mega-kick':      { contact: true },
+    'counter':        { contact: true },
+    'peck':           { contact: true },
+    'drill-peck':     { contact: true },
+    'body-press':     { contact: true },
+    'close-combat':   { contact: true },
+    'earthquake':     { }, // spread in doubles but not contact
+    'rock-slide':     { }, // spread in doubles
+    'heat-wave':      { }, // spread in doubles
+    'discharge':      { }, // spread in doubles
+    'surf':           { }, // spread in doubles
+    'hyper-voice':    { }, // spread in doubles
+    'dazzling-gleam': { }, // spread in doubles
+    'sludge-wave':    { }, // spread in doubles
+    'muddy-water':    { }, // spread in doubles
+    'blizzard':       { }, // spread in doubles
+    'lava-plume':     { }, // spread in doubles
+    'icicle-crash':   { contact: false },
+    'power-whip':     { contact: true },
+    'crunch':         { contact: true },
+    'ice-fang':       { contact: true },
+    'fire-fang':      { contact: true },
+    'thunder-fang':   { contact: true },
+    'poison-fang':    { contact: true },
+    'play-rough':     { contact: true },
+    'knock-off':      { contact: true },
+    'u-turn':         { contact: true },
+    'volt-switch':    { contact: false },
+    'flip-turn':      { contact: true },
+    'parting-shot':   { contact: false },
+    'spirit-shackle': { contact: false },
+    'rapid-spin':     { contact: true },
+    'spin-out':       { contact: true },
+    'high-horsepower': { contact: true },
+    'psychic-fangs':  { contact: true },
+    'ice-spinner':    { contact: true },
+    'last-respects':  { contact: true },
+    'chilling-water': { contact: false },
+
+    // --- Προσθήκη για το MOVE_FLAGS σου ---
+
+// Guaranteed Critical Hits (ήταν σημαντική παράλειψη)
+'wicked-blow':      { highCrit: true, contact: true }, 
+'surging-strikes':  { highCrit: true, contact: true, multiHit: { min: 3, max: 3 } }, 
+'frost-breath':     { highCrit: true }, 
+'storm-throw':      { highCrit: true, contact: true }, 
+
+// Signature & 9th Gen Moves
+'gigaton-hammer':   { contact: true },
+'bitter-blade':     { contact: true, drain: 0.5 },
+'aqua-cutter':      { contact: true, highCrit: true },
+'ivy-cudgel':       { contact: true, highCrit: true },
+'kowtow-cleave':    { contact: true, highCrit: true }, // (Σημ: στα παιχνίδια δεν χάνει ποτέ, αλλά είναι high crit)
+'flower-trick':     { contact: true, highCrit: true }, 
+'torch-song':       { },
+'aqua-step':        { contact: true },
+'raging-bull':      { contact: true },
+'make-it-rain':     { },
+'psyblade':         { contact: true },
+'hydro-steam':      { },
+'ruination':        { },
+'collision-course': { contact: true },
+'electro-drift':    { contact: true },
+'shed-tail':        { },
+'chilly-reception': { },
+'tidy-up':          { },
+'hyper-drill':      { contact: true },
+'twin-beam':        { },
+'rage-fist':        { contact: true },
+'armor-cannon':     { },
+'double-shock':     { contact: true },
+'comeuppance':      { contact: true },
+'blood-moon':       { },
+'matcha-gotcha':    { drain: 0.5 },
+'syrup-bomb':       { },
+'electro-shot':     { twoTurn: true },
+'tera-starstorm':   { },
+'fickle-beam':      { },
+'burning-bulwark':  { priority: 4 },
+'mighty-cleave':    { contact: true },
+'tachyon-cutter':   { },
+'hard-press':       { contact: true },
+'dragon-cheer':     { },
+'malignant-chain':  { },
+
+// Recoil/Self-Recoil που έλειπαν
+'wave-crash':       { recoil: 0.33, contact: true }
+
+};
+
+// Spread moves (hit all opponents in Doubles — ×0.75 damage per target)
+const SPREAD_MOVES = new Set([
+    'earthquake','magnitude','surf','muddy-water','discharge','lava-plume','heat-wave',
+    'blizzard','icy-wind','rock-slide','hyper-voice','boomburst','dazzling-gleam','sludge-wave',
+    'petal-blizzard','noble-roar','snarl','breaking-swipe','glacial-lance','astral-barrage',
+    'springtide-storm','bleakwind-storm','sandsear-storm','wildbolt-storm','alluring-voice',
+    'burning-jealousy','overdrive','expanding-force','mystical-fire','sparkling-aria',
+    'electroweb','acid-spray','razor-wind','icicle-crash',
+]);
+
+// Abilities with contact proc chance (ability name → { chance: %, effect: description })
+const CONTACT_PROC_ABILITIES = {
+    'static':      { chance: 30, effect: 'Paralysis' },
+    'flame-body':  { chance: 30, effect: 'Burn' },
+    'poison-point': { chance: 30, effect: 'Poison' },
+    'effect-spore': { chance: 30, effect: 'Status (sleep/paralysis/poison)' },
+    'rough-skin':  { chance: 100, effect: 'Recoil ~1/8 HP' },
+    'iron-barbs':  { chance: 100, effect: 'Recoil ~1/8 HP' },
+    'cute-charm':  { chance: 30, effect: 'Infatuation' },
+    'cursed-body': { chance: 30, effect: 'Disable used move' },
+    'gooey':       { chance: 100, effect: 'Lowers Speed' },
+    'tangling-hair': { chance: 100, effect: 'Lowers Speed' },
+    'mummy':       { chance: 100, effect: 'Copies Mummy to attacker' },
+    'wandering-spirit': { chance: 100, effect: 'Swaps abilities' },
+    'perish-body': { chance: 100, effect: 'Both faint in 3 turns' },
+};
+
+// Survival abilities/items that block an OHKO
+const OHKO_BLOCKERS = new Set(['sturdy', 'multiscale', 'shadow-shield', 'disguise']);
+const OHKO_BLOCKER_ITEMS = new Set(['focus-sash', 'focus-band']);
+
+// Extended type immunity / modifier abilities (supplement to getDynamicMult)
+const ABILITY_IMMUNITY_EXTRA = {
+    'wonder-guard':    (moveType, defTypes) => {
+        // Only super-effective moves deal damage
+        // This is handled in getDynamicMult via returning 0 unless typeMult > 1
+        return null; // handled separately
+    },
+    'fluffy':          (moveType, isContact) => isContact ? 2 : (moveType === 'fire' ? 2 : null),
+    'dry-skin':        (moveType) => moveType === 'water' ? 0 : (moveType === 'fire' ? 1.25 : null),
+    'sap-sipper':      (moveType) => moveType === 'grass' ? 0 : null,
+    'earth-eater':     (moveType) => moveType === 'ground' ? 0 : null,
+    'well-baked-body': (moveType) => moveType === 'fire' ? 0 : null,
+    'wind-rider':      (moveType) => moveType === 'flying' ? 0 : null,
+    'purifying-salt':  (moveType) => moveType === 'ghost' ? 0.5 : null,
+    'heatproof':       (moveType) => moveType === 'fire' ? 0.5 : null,
+    'ice-scales':      (moveType, isContact, cat) => cat === 'special' ? 0.5 : null,
+    'stamina':         null, // raises Defense on hit — not an immunity, tracked as note
+    'dauntless-shield': null, // raises Defense on entry — not move-specific
+};
+

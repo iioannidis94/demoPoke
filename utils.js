@@ -1,4 +1,4 @@
-// --- utils.js : Κοινές Βοηθητικές Συναρτήσεις ---
+// --- utils.js : Common Utility Functions ---
 
 function dmgR(types) {
     const x4 = [], x2 = [], half = [], qtr = [], imm = [];
@@ -14,7 +14,7 @@ function dmgR(types) {
     return { x4, x2, half, qtr, imm };
 }
 
-// Τροποποίηση: Το tb (Type Badge) είναι πλέον clickable και ανοίγει το Type Chart
+// Change: The tb (Type Badge) is now clickable and opens the Type Chart
 const tb = (t, c = 'tb') => `<span class="${c}" style="background:${TC[t] || '#888'}; cursor:pointer; transition:transform 0.1s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'" onclick="showTypeChart('${t}')" title="Click to view Type Chart">${t}</span>`;
 const dbw = (t, l) => `<span class="dbw" style="background:${TC[t] || '#888'}; cursor:pointer;" onclick="showTypeChart('${t}')">${t}<span class="mx">${l}</span></span>`;
 const dbs = t => `<span class="dbs" style="background:${TC[t] || '#888'}; cursor:pointer;" onclick="showTypeChart('${t}')">${t}</span>`;
@@ -36,10 +36,28 @@ function multAtkVsTypes(atk, types) {
 
 function spriteImg(p, cls = '') { 
     const b64 = SPRITES[String(p.id)] || ''; 
-    return b64 ? `<img class="${cls}" src="data:image/png;base64,${b64}" alt="${p.name}">` : '?'; 
+    if (b64) return `<img class="${cls}" src="data:image/png;base64,${b64}" alt="${p.name}">`;
+    // Mega Evolution IDs 10062–10080 have incorrect/shifted sprites in the PokeAPI path;
+    // use Pokémon Showdown sprites (keyed by name) which are correct.
+    const isBrokenMega = p.id >= 10062 && p.id <= 10080;
+    if (isBrokenMega) {
+        const showdownName = p.name; // already in showdown format (e.g. "pidgeot-mega")
+        const spriteUrl = `https://play.pokemonshowdown.com/sprites/gen6/${showdownName}.png`;
+        return `<img class="${cls}" src="${spriteUrl}" alt="${p.name}" onerror="this.parentElement.textContent='?'">`;
+    }
+    // Alolan form IDs (10091–10108) have incorrect/duplicate sprites in the main PokeAPI path;
+    // use the generation-vii sprites which are correct for all Alolan forms.
+    // In the gen-vii/usum directory, IDs 10093–10099 are duplicates or placeholders,
+    // so the real sprites for IDs 10093–10108 are stored at offset +7 (i.e. 10100–10115).
+    const isAlolan = p.id >= 10091 && p.id <= 10108;
+    const alolanUrlId = (isAlolan && p.id >= 10093) ? p.id + 7 : p.id;
+    const spriteUrl = isAlolan
+        ? `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-vii/ultra-sun-ultra-moon/${alolanUrlId}.png`
+        : `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${p.id}.png`;
+    return `<img class="${cls}" src="${spriteUrl}" alt="${p.name}" onerror="this.parentElement.textContent='?'">`;
 }
 
-// --- ΝΕΟ: TYPE CHART MODAL ---
+// --- NEW: TYPE CHART MODAL ---
 function showTypeChart(type) {
     let overlay = document.getElementById('typeModalOverlay');
     if (!overlay) {
@@ -50,12 +68,12 @@ function showTypeChart(type) {
         document.body.appendChild(overlay);
     }
 
-    // Υπολογισμός Επιθετικών (Offense)
+    // Calculate Offensive matchups (Offense)
     const offDouble = AT.filter(t => (EFF[type][t] ?? 1) === 2);
     const offHalf = AT.filter(t => (EFF[type][t] ?? 1) === 0.5);
     const offZero = AT.filter(t => (EFF[type][t] ?? 1) === 0);
 
-    // Υπολογισμός Αμυντικών (Defense)
+    // Calculate Defensive matchups (Defense)
     const defDouble = AT.filter(t => (EFF[t][type] ?? 1) === 2);
     const defHalf = AT.filter(t => (EFF[t][type] ?? 1) === 0.5);
     const defZero = AT.filter(t => (EFF[t][type] ?? 1) === 0);
@@ -88,9 +106,25 @@ function showTypeChart(type) {
     overlay.style.display = 'flex';
 }
 
-// --- ΠΡΟΣΘΗΚΗ ΣΤΟ ΤΕΛΟΣ ΤΟΥ utils.js ---
 
-// Λεξικό: Πώς τα Abilities αλλάζουν το Damage (0 = Immune, 0.5 = Resist, 2 = Weak)
+// --- TOAST NOTIFICATION ---
+let _toastTimer = null;
+function showToast(message, duration) {
+    duration = duration || 2800;
+    let toast = document.getElementById('pkToast');
+    if (!toast) {
+        toast = document.createElement('div');
+        toast.id = 'pkToast';
+        document.body.appendChild(toast);
+    }
+    toast.textContent = message;
+    toast.className = 'pk-toast pk-toast-show';
+    clearTimeout(_toastTimer);
+    _toastTimer = setTimeout(() => { toast.className = 'pk-toast'; }, duration);
+}
+
+
+// Dictionary: How Abilities modify Damage (0 = Immune, 0.5 = Resist, 2 = Weak)
 const ABILITY_TYPE_MODS = {
     "levitate": { "ground": 0 },
     "water absorb": { "water": 0 },
@@ -110,19 +144,19 @@ const ABILITY_TYPE_MODS = {
     "fluffy": { "fire": 2 }
 };
 
-// Η νέα, Έξυπνη Συνάρτηση Υπολογισμού
+// The new, Smart Damage Calculation Function
 function getDynamicMult(atkType, defTypes, ability) {
-    // 1. Παίρνουμε το κανονικό multiplier από τους τύπους
+    // 1. Get the normal type multiplier
     let mult = multAtkVsTypes(atkType, defTypes);
     
-    // 2. Αν το Pokémon έχει Ability, ελέγχουμε αν αλλάζει κάτι
+    // 2. If the Pokémon has an Ability, check if it changes anything
     if (ability) {
-        let cleanAbility = ability.toLowerCase().replace(/-/g, ' '); // Καθαρισμός ονόματος
+        let cleanAbility = ability.toLowerCase().replace(/-/g, ' '); // Sanitize ability name
         if (ABILITY_TYPE_MODS[cleanAbility]) {
             const mod = ABILITY_TYPE_MODS[cleanAbility][atkType.toLowerCase()];
             if (mod !== undefined) {
-                if (mod === 0) return 0; // Απόλυτη Ανοσία (π.χ. Levitate)
-                mult *= mod; // Πολλαπλασιασμός (π.χ. x0.5 για Thick Fat)
+                if (mod === 0) return 0; // Full Immunity (e.g. Levitate)
+                mult *= mod; // Multiply (e.g. x0.5 for Thick Fat)
             }
         }
     }

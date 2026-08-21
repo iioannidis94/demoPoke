@@ -3,6 +3,11 @@
   --brd:#252545; --txt:#e8e8ff; --dim:#7070aa;
   --red:#ff4466; --yel:#ffcc00; --r:12px;
 }
+body.light-mode{
+  --bg:#f4f6ff; --surf:#ffffff; --surf2:#eef1ff;
+  --brd:#cfd6ff; --txt:#1e2240; --dim:#59608f;
+  --red:#e03131; --yel:#f59f00;
+}
 *{box-sizing:border-box;margin:0;padding:0}
 body{background:var(--bg);color:var(--txt);font-family:'Nunito',sans-serif;min-height:100vh}
 body::before{
@@ -24,8 +29,8 @@ header {
   display: flex;
   align-items: center;
   gap: 16px;
-  flex-wrap: nowrap; /* ΑΛΛΑΞΕ ΤΟ ΑΠΟ wrap ΣΕ nowrap */
-  overflow-x: auto;  /* ΕΠΙΤΡΕΠΕΙ ΤΟ ΟΡΙΖΟΝΤΙΟ SCROLL */
+  flex-wrap: nowrap; /* CHANGED FROM wrap TO nowrap */
+  overflow-x: auto;  /* ALLOWS HORIZONTAL SCROLL */
 }
 .logo{font-family:'Press Start 2P',monospace;font-size:13px;color:var(--yel);
   text-shadow:0 0 24px rgba(255,204,0,.5);white-space:nowrap;}
@@ -149,19 +154,39 @@ main{position:relative;z-index:1;padding:14px 12px;max-width:1700px;margin:0 aut
   color:#171015;
   box-shadow:0 0 22px rgba(255,204,0,.18);
 }
+.themeToggle{
+  border:1.5px solid var(--brd);
+  background:var(--surf2);
+  color:var(--txt);
+  border-radius:50px;
+  padding:8px 11px;
+  font:900 12px 'Nunito',sans-serif;
+  cursor:pointer;
+}
+.themeToggle:hover{border-color:var(--yel)}
 
 body.team-view .sw,body.team-view .tfs,body.team-view .sb,body.team-view main{display:none}
 
 body.team-view .teamOverlay{position:relative;inset:auto;display:block;z-index:1;background:transparent;backdrop-filter:none;padding:0;overflow:visible}
 body.team-view .teamPanel{box-shadow:none}
 body.team-view .teamClose{display:none}
+body.team-view .calcOverlay{display:none}
+body.calc-view .sw,body.calc-view .tfs,body.calc-view .sb,body.calc-view main{display:none}
+body.calc-view .teamOverlay{display:none}
+body.calc-view .calcOverlay{position:relative;inset:auto;display:block;z-index:1;background:transparent;backdrop-filter:none;padding:0;overflow:visible}
+body.calc-view .calcViewPanel{box-shadow:none}
+body.calc-view #calcClose{display:none}
 body.dex-view .teamOverlay{display:none}
+body.dex-view .calcOverlay{display:none}
 body.dex-view .sw{display:block}
 @media(max-width:620px){.teamBtn,.dexBtn{margin-left:0;flex:1;text-align:center}.logo{width:100%}}
 .teamOverlay{position:fixed;inset:0;z-index:300;background:rgba(5,5,12,.82);backdrop-filter:blur(10px);display:none;padding:18px;overflow:auto}.teamOverlay.open{display:block}
 .teamPanel{width:100%;max-width:none;margin:0;background:var(--surf);border:1px solid var(--brd);border-radius:var(--r);box-shadow:0 22px 80px rgba(0,0,0,.55);overflow:hidden}
+.calcOverlay{position:fixed;inset:0;z-index:300;background:rgba(5,5,12,.82);backdrop-filter:blur(10px);display:none;padding:18px;overflow:auto}
+.calcViewPanel{width:100%;max-width:none;margin:0;background:var(--surf);border:1px solid var(--brd);border-radius:var(--r);box-shadow:0 22px 80px rgba(0,0,0,.55);overflow:hidden}
+.calcViewBody{padding:14px;display:grid;grid-template-columns:1fr;gap:10px}
 
-/* --- ΔΙΟΡΘΩΣΗ ΓΙΑ ΜΟΝΗ ΓΡΑΜΜΗ ΣΤΗΝ ΠΑΝΩ ΜΠΑΡΑ (Οριζόντιο Scroll) --- */
+/* --- FIX FOR SINGLE LINE IN THE TOP BAR (Horizontal Scroll) --- */
 .teamTop {
   position: sticky; 
   top: 0; 
@@ -179,10 +204,10 @@ body.dex-view .sw{display:block}
 .teamTop::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.2); border-radius: 10px; }
 .teamTop::-webkit-scrollbar-thumb { background: var(--brd); border-radius: 10px; }
 .teamTop::-webkit-scrollbar-thumb:hover { background: var(--dim); }
-.teamTitle, .teamTool, .teamReset, .teamClose, .importTool { flex-shrink: 0; white-space: nowrap; }
+.teamTitle, .teamTool, .teamReset, .teamClose, .calcClose, .importTool { flex-shrink: 0; white-space: nowrap; }
 
 .teamTitle{font-family:'Press Start 2P',monospace;font-size:12px;color:var(--yel);margin-right:auto}
-.teamClose,.teamReset,.teamTool{border:1px solid var(--brd);background:var(--surf2);color:var(--txt);border-radius:50px;padding:8px 12px;font-family:'Nunito',sans-serif;font-weight:900;cursor:pointer}.teamTool{border-color:var(--yel);color:var(--yel);background:rgba(255,204,0,.08);font-size:12px}.importTool{display:inline-flex;align-items:center}.teamReset{border-color:var(--red);color:#fff;background:rgba(255,68,102,.16)}
+.teamClose,.calcClose,.teamReset,.teamTool{border:1px solid var(--brd);background:var(--surf2);color:var(--txt);border-radius:50px;padding:8px 12px;font-family:'Nunito',sans-serif;font-weight:900;cursor:pointer}.teamTool{border-color:var(--yel);color:var(--yel);background:rgba(255,204,0,.08);font-size:12px}.importTool{display:inline-flex;align-items:center}.teamReset{border-color:var(--red);color:#fff;background:rgba(255,68,102,.16)}
 .teamBody{display:grid;grid-template-columns:minmax(280px,360px) 1fr;gap:0;min-height:620px}.teamPicker{border-right:1px solid var(--brd);padding:14px;background:#101024}
 .teamSearch{width:100%;background:var(--surf2);border:1.5px solid var(--brd);border-radius:50px;color:var(--txt);font-family:'Nunito',sans-serif;font-weight:800;padding:10px 14px;outline:none;margin-bottom:10px}.teamSearch:focus{border-color:var(--yel);box-shadow:0 0 0 3px rgba(255,204,0,.13)}
 .teamList{display:flex;flex-direction:column;gap:7px;max-height:552px;overflow:auto;padding-right:4px}.pickMon{border:1px solid var(--brd);background:var(--surf);color:var(--txt);border-radius:8px;padding:8px;display:grid;grid-template-columns:46px 1fr;gap:9px;align-items:center;text-align:left;cursor:pointer;transition:border-color .15s,background .15s}.pickMon:hover{border-color:var(--yel);background:#191934}.pickMon img{width:42px;height:42px;object-fit:contain;image-rendering:pixelated;background:var(--surf2);border-radius:8px}.pickName{font-weight:900;text-transform:capitalize;font-size:13px;margin-bottom:4px}.pickTypes{display:flex;gap:4px;flex-wrap:wrap}
@@ -201,7 +226,16 @@ body.dex-view .sw{display:block}
 .calcThreat{display:inline-flex;align-items:center;gap:5px;border:1px solid var(--brd);border-radius:50px;padding:2px 7px 2px 2px;font-size:10px;font-weight:900;color:var(--txt);background:var(--surf2)}.calcThreat span{border-radius:50px;padding:1px 7px;color:#fff;text-transform:uppercase;text-shadow:0 1px 2px rgba(0,0,0,.45)}.calcNone,.calcEmpty{color:var(--dim);font-size:11px;font-weight:800}.slotActions{display:flex;align-items:center;gap:6px}.calcToggle{border:1px solid var(--brd);background:var(--surf);color:var(--dim);border-radius:50px;padding:7px 9px;font:900 10px 'Nunito',sans-serif;cursor:pointer;white-space:nowrap}.calcToggle.on{border-color:var(--yel);background:rgba(255,204,0,.16);color:var(--yel)}
 @media(max-width:980px){.calcRows{grid-template-columns:1fr}.slotActions{flex-direction:column;align-items:flex-end}.calcToggle{font-size:9px;padding:6px 8px}}
 
-/* ΝΕΟΣ ΣΧΕΔΙΑΣΜΟΣ ΓΙΑ ΤΑ MOVES */
+/* Responsive bar rows for Speed Tier & Stat Comparison */
+.speedBar{display:grid;grid-template-columns:minmax(60px,120px) 1fr 38px;gap:8px;align-items:center;font-size:11px;}
+.statBar{display:grid;grid-template-columns:minmax(60px,130px) 1fr 44px;gap:8px;align-items:center;font-size:11px;}
+@media(max-width:480px){
+  .speedBar,.statBar{grid-template-columns:minmax(50px,90px) 1fr 34px;gap:5px;font-size:10px;}
+  .calcPanel{padding:8px;}
+  .calcHead strong{font-size:12px;}
+}
+
+/* NEW DESIGN FOR MOVES */
 .movesGrid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -295,13 +329,45 @@ body.dex-view .sw{display:block}
   header{padding:10px 12px}
 }
 
-/* Styling για το scroll της μπάρας */
+/* Styling for the bar scroll */
 header::-webkit-scrollbar { height: 4px; }
 header::-webkit-scrollbar-track { background: transparent; }
 header::-webkit-scrollbar-thumb { background: var(--brd); border-radius: 2px; }
 
-/* Αναγκάζουμε τα στοιχεία να μην μικραίνουν */
-.logo, .sw, .teamBtn, .dexBtn {
+/* Force elements not to shrink */
+.logo, .sw, .teamBtn, .dexBtn, .themeToggle {
   flex-shrink: 0;
   white-space: nowrap;
 }
+
+/* Toast notification */
+.pk-toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: var(--surf2);
+    border: 1px solid var(--brd);
+    color: var(--txt);
+    font-family: 'Nunito', sans-serif;
+    font-size: 13px;
+    font-weight: 800;
+    padding: 10px 20px;
+    border-radius: 50px;
+    box-shadow: 0 6px 24px rgba(0,0,0,0.4);
+    z-index: 99999;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity .25s, transform .25s;
+    white-space: nowrap;
+}
+.pk-toast.pk-toast-show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+}
+
+/* Bosses Modal */
+#bossesOverlay[aria-hidden="true"] { display: none; }
+#bossesOverlay[aria-hidden="false"] { display: flex; }
+.bossListItem:hover { background: var(--brd) !important; }
+.bossListItem.active { background: var(--brd) !important; }

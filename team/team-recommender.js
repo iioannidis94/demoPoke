@@ -3,7 +3,7 @@
 window.showMoveRecommendations = function() {
     const selected = typeof calcTeam === 'function' ? calcTeam() : [];
     if (!selected.length) {
-        alert('Βάλε πρώτα μερικά Pokémon στο Battle Calculate για να σου προτείνω επιθέσεις!');
+        alert('Add some Pokémon to Battle Calculate first so I can suggest moves!');
         return;
     }
 
@@ -25,9 +25,9 @@ window.showMoveRecommendations = function() {
 
     let modalHtml = `<div id="moveRecModal" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:9999; display:flex; justify-content:center; align-items:center; padding:20px; box-sizing:border-box;">
         <div style="background:var(--bg); border:2px solid #4dabf7; border-radius:12px; max-width:850px; width:100%; max-height:90vh; overflow-y:auto; padding:25px; position:relative; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
-            <button onclick="document.getElementById('moveRecModal').remove()" style="position:absolute; top:15px; right:15px; background:#ff4d4f; color:white; border:none; padding:8px 15px; border-radius:6px; cursor:pointer; font-weight:bold; font-size:14px; transition:0.2s;">❌ Κλείσιμο</button>
+            <button onclick="document.getElementById('moveRecModal').remove()" style="position:absolute; top:15px; right:15px; background:#ff4d4f; color:white; border:none; padding:8px 15px; border-radius:6px; cursor:pointer; font-weight:bold; font-size:14px; transition:0.2s;">❌ Close</button>
             <h2 style="color:#4dabf7; margin-top:0; font-size:22px;">💡 Pro-Tier Move Optimizer</h2>
-            <p style="font-size:14px; opacity:0.8; margin-bottom:20px;">Το AI αναλύει πλέον <strong>Στρατηγικούς Ρόλους (Tanks, Setup Sweepers, Utility)</strong>. Θα δεις Core Healing & Toxic σε αμυντικά Pokémon, και Setup Moves σε επιθετικά!</p>
+            <p style="font-size:14px; opacity:0.8; margin-bottom:20px;">The AI now analyses <strong>Strategic Roles (Tanks, Setup Sweepers, Utility)</strong>. You will see Core Healing & Toxic on defensive Pokémon, and Setup Moves on offensive ones!</p>
             <div style="display:flex; flex-direction:column; gap:15px;">`;
 
     selected.forEach(x => {
@@ -37,7 +37,7 @@ window.showMoveRecommendations = function() {
         }
         if (!moveList.length) return;
 
-        // Υπολογισμός Ρόλου (Tank vs Sweeper)
+        // Calculate Role (Tank vs Sweeper)
         let bs = (typeof BASE_STATS !== 'undefined' && BASE_STATS[x.p.id]) ? BASE_STATS[x.p.id] : {hp:80, atk:80, def:80, spa:80, spd:80, spe:80};
         let rHP = getRealStat(bs.hp, x.slot.iv?.HP, x.slot.ev?.HP, x.slot.level, true);
         let rAtk = getRealStat(bs.atk, x.slot.iv?.ATK, x.slot.ev?.ATK, x.slot.level, false);
@@ -49,13 +49,13 @@ window.showMoveRecommendations = function() {
         let bstReal = rHP + rAtk + rDef + rSpa + rSpd + rSpe; 
         let bulk = rHP + rDef + rSpd; 
         
-        let isTank = bulk > (bstReal * 0.51); // Αν το μισό του σώμα είναι HP/DEF/SPDEF, είναι Tank!
+        let isTank = bulk > (bstReal * 0.51); // If more than half of bulk is HP/DEF/SPDEF, it's a Tank!
         let isPhysical = rAtk > rSpa * 1.15; 
         let isSpecial = rSpa > rAtk * 1.15;  
 
         let scoredMoves = [];
 
-        // Αξιολόγηση με το νέο "Pro" Σύστημα
+        // Evaluate with the new "Pro" System
         moveList.forEach(mName => {
             let cleanName = mName.toLowerCase().replace(/\s+/g, '-');
             let mInfo = typeof MOVE_INFO !== 'undefined' ? (MOVE_INFO[mName] || MOVE_INFO[cleanName]) : null;
@@ -71,7 +71,7 @@ window.showMoveRecommendations = function() {
                 if (PRO_MOVES.SETUP_PHYS.includes(cleanName) && isPhysical) { score += 250; reasons.push('⚔️ Sweeper Setup'); }
                 if (PRO_MOVES.SETUP_SPEC.includes(cleanName) && isSpecial) { score += 250; reasons.push('🔮 Sweeper Setup'); }
                 if (PRO_MOVES.UTILITY.includes(cleanName)) { score += 180; reasons.push('🛡️ Pro Utility'); }
-                if (isTank && score === 0) score += 30; // Μικρό bonus σε τυχαία status για τα Tanks
+                if (isTank && score === 0) score += 30; // Small bonus to random status for Tanks
             } else {
                 // Damaging Moves
                 if (x.p.types.includes(mInfo.type)) { score += 100; reasons.push('💥 STAB'); }
@@ -86,7 +86,7 @@ window.showMoveRecommendations = function() {
                 }
 
                 if (mInfo.power >= 90) { 
-                    score += isTank ? 30 : 80; // Τα Tanks δεν καίγονται για Power
+                    score += isTank ? 30 : 80; // Tanks don't care much about raw Power
                     if(!isTank) reasons.push('High Dmg'); 
                 } else if (mInfo.power >= 70) { 
                     score += 40; 
@@ -101,11 +101,11 @@ window.showMoveRecommendations = function() {
             if (score > 0) scoredMoves.push({ name: mName, info: mInfo, score, reasons });
         });
 
-        // Σορτάρισμα και Diversification (Ποικιλία)
+        // Sorting and Diversification (Variety)
         scoredMoves.sort((a,b) => b.score - a.score);
         let topMoves = [];
         let coveredTypes = new Set();
-        let maxStatus = isTank ? 3 : 2; // Τα Tanks μπορούν να προταθούν με 3 Status!
+        let maxStatus = isTank ? 3 : 2; // Tanks can be suggested with 3 Status moves!
         let statusCount = 0;
 
         for (let m of scoredMoves) {
@@ -146,7 +146,7 @@ window.showMoveRecommendations = function() {
                 </span>
                 ${reasonsHtml}
             </div>`;
-        }).join('') : '<span style="color:red; font-size:12px;">Δεν βρέθηκαν προτεινόμενες επιθέσεις.</span>';
+        }).join('') : '<span style="color:red; font-size:12px;">No recommended moves found.</span>';
 
         let spriteHtml = typeof spriteImg !== 'undefined' ? spriteImg(x.p) : '';
 

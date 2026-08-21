@@ -3,8 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <meta name="theme-color" content="#0d0d1a">
     <title>Pokédex — Type Chart</title>
     <link rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAClElEQVR4nO2bO1bDMBBFX3LovQOnoHdLzw5YKTugT+ueItlBVhAKzuSIsX6jz0gyeR2Obek+zUijBAH/XAfNxuZ5vsfee71eVfpWtREO/CV49p39XcuQ4i81oSXAIZmGlDSj2ItqgXOVNiL7BQReE9olMiPHiGNOB1rCm+1KJleuZOfmeb63ArfpHWmRIH6g9aj7lJISohToGR5IS4loA3qHJ0lNiDJgFHiSxISgAaPBk2JNiIqA0eBJMf32zpYpS93r5fLBr32fTp/C1xSVb4l0RkApeN91LX3BnQpWA1IqqxBkaxMAO5czAkbNe5dcPBsDeitxS8qWClmbIVOhia71ROjSHwNydlWAG7I3eJPzwD/Ya/ibMpfFYikwqh4RoD36/EtPQHfloSh4UWzz0XDoM00j1Azwgbvu1TBCxQAb/Lqum2vLsmyeq23CEdDPfxu873oNUVFUfRXgo0+Q0zSdp2k68/u5CZLUSdEByC+AYmXCm9dvt9sbv5enQy2p1QHS8NZKhyaFkDnittHXlHodQGoNTvr3pfDTAK2GpLO61irwWAZrzbocJKadlGdStCxL/QjgnQ+NrBY86Qj8bgu1Qg5wm6DdB7Xt8LquG7gYWI1iSK0OIJhewEnqhZDPCE1w0uZL0Rad0BblP/AshLYGaM7ELcT5/hig9f+5rWVyPlOAX9AuijRlTn4kZwTszQQXj9WAvc4FNi5nBOwpFWyhT/JOgnswwQcPRK4Co5oQ0++gAeTeaCZQf0PzWVQEjGZCLDwgKIRGMUECDwgrwd5NkMIDmSdGeto6h2Z7l7IKHvpRtaURKaNuKmsz1DolcuGBSucGa0aEaXYX5wa5ahlRGpykenZYYghPq2HODvvU4+nxH0NuMn0Jo27yAAAAAElFTkSuQmCC">
+    <link rel="manifest" href="manifest.json">
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Nunito:wght@400;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
 </head>
@@ -18,6 +20,8 @@
   </div>
   <button class="teamBtn" id="myTeamBtn" type="button">Team Builder</button>
   <button class="teamBtn dexBtn" id="dexViewBtn" type="button">Weaknesses / Counters</button>
+  <button class="teamBtn" id="calcViewBtn" type="button">Battle Calculator</button>
+  <button class="themeToggle" id="themeToggle" type="button" aria-label="Toggle theme">🌙</button>
 </header>
 
 <div class="tfs" id="tf"></div>
@@ -33,6 +37,7 @@
       <button id="addTeamBtn" class="teamTool" type="button">+ New Team</button>
       <button id="renameTeamBtn" class="teamTool" type="button" style="margin-right: auto;">Rename</button>
       
+      <button class="teamTool" id="bossesBtn" type="button" style="border-color: #ff6b6b; color: #ff6b6b; background: rgba(255,107,107,0.1);">⚔️ Bosses</button>
       <button class="teamTool" id="autoTeamBtn" type="button" style="border-color: #38d878; color: #38d878; background: rgba(56,216,120,0.1);">✨ Auto-Build 6</button>
       <button class="teamTool" id="teamExport" type="button">Export JSON</button>
       <label class="teamTool importTool" for="teamImport">Import JSON</label>
@@ -50,33 +55,85 @@
   </section>
 </div>
 
-<!-- 1. Data Layer (Πρώτα φορτώνουμε τις σταθερές) -->
+<div class="calcOverlay" id="calcOverlay" aria-hidden="true">
+  <section class="calcViewPanel" aria-labelledby="calcViewTitle">
+    <div class="teamTop">
+      <h2 class="teamTitle" id="calcViewTitle">BATTLE CALCULATOR</h2>
+      <button class="calcClose" id="calcClose" type="button">Close</button>
+    </div>
+    <div class="calcViewBody" id="calcViewContent"></div>
+  </section>
+</div>
+
+<!-- Bosses Modal -->
+<div id="bossesOverlay" aria-hidden="true" style="
+    position:fixed; inset:0; z-index:9999;
+    background:rgba(0,0,0,0.7); align-items:center; justify-content:center;
+    transition:.2s;
+" role="dialog" aria-modal="true" aria-labelledby="bossesTitle">
+  <section style="
+    background:var(--panel); border:1px solid var(--brd); border-radius:16px;
+    width:min(96vw, 900px); max-height:90vh; display:flex; flex-direction:column;
+    overflow:hidden; box-shadow: 0 8px 40px rgba(0,0,0,0.5);
+  ">
+    <!-- Header -->
+    <div style="display:flex; align-items:center; padding:14px 20px; border-bottom:1px solid var(--brd); gap:10px; flex-shrink:0;">
+      <span style="font-size:20px;">⚔️</span>
+      <h2 id="bossesTitle" style="margin:0; font-size:16px; font-weight:900; color:var(--txt); flex:1;">Boss Trainers</h2>
+      <button type="button" onclick="closeBossesModal()" style="background:none; border:none; color:var(--dim); font-size:22px; cursor:pointer; line-height:1; padding:0 4px;" aria-label="Close">×</button>
+    </div>
+    <!-- Body -->
+    <div style="display:flex; flex:1; overflow:hidden;">
+      <!-- Boss List -->
+      <div id="bossListPanel" style="
+        width:220px; flex-shrink:0; overflow-y:auto; border-right:1px solid var(--brd);
+        background:var(--bg);
+      "></div>
+      <!-- Boss Detail -->
+      <div id="bossDetailPanel" style="flex:1; overflow-y:auto;"></div>
+    </div>
+  </section>
+</div>
+
+<!-- 1. Data Layer (Load constants first) -->
 <script src="data/TC.js" defer></script>
 
 
-<!-- 2. Μετά τα μεγάλα Data αντικείμενα -->
+<!-- 2. Then the large Data objects -->
 <script src="data/pokemon-core.js" defer></script>
 <script src="data/base_stats.js" defer></script>
 <script src="data/abilities.js" defer></script>
 <script src="data/sprites.js" defer></script>
+
 <script src="data/moves.js" defer></script>
-    <script src="data/move-info.js" defer></script>
+<script src="data/move-info.js" defer></script>
+<script src="move-metadata.js" defer></script>
+<script src="data/bosses.js" defer></script>
+<script src="data/move-evolutions.js" defer></script>
 
-
-<!-- 3. Εργαλεία που χρησιμοποιούνται παντού -->
+<!-- 3. Tools used everywhere -->
 <script src="utils.js" defer></script>
 
-<!-- 4. Το Core Logic της ομάδας (πρέπει να τρέξει ΠΡΙΝ το UI!) -->
+<!-- 4. Team Core Logic (must run BEFORE the UI!) -->
 <script src="team/team-core.js" defer></script>
 
-<!-- 5. Τελευταία τα αρχεία που "πειράζουν" το HTML (UI, Events, AI) -->
+<!-- 5. Last, the files that modify the HTML (UI, Events, AI) -->
 <script src="team/team-io.js" defer></script>
 <script src="team/team-ai.js" defer></script>
 <script src="team/team-recommender.js" defer></script>
+<script src="team/team-analytics.js" defer></script>
     
 <script src="team/team-ui.js" defer></script>
     <script src="team/team-oop.js" defer></script>
+<script src="team/team-bosses.js" defer></script>
 <script src="dex.js" defer></script>
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').catch(() => {});
+  });
+}
+</script>
 
 </body>
 </html>

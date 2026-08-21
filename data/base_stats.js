@@ -1037,5 +1037,166 @@ const BASE_STATS = {
   "1022": { hp: 90, atk: 120, def: 80, spa: 68, spd: 108, spe: 124 }, // Iron Boulder
   "1023": { hp: 90, atk: 72, def: 100, spa: 122, spd: 108, spe: 98 }, // Iron Crown
   "1024": { hp: 90, atk: 65, def: 85, spa: 65, spd: 85, spe: 60 }, // Terapagos
-  "1025": { hp: 88, atk: 88, def: 160, spa: 88, spd: 88, spe: 88 }  // Pecharunt
+  "1025": { hp: 88, atk: 88, def: 160, spa: 88, spd: 88, spe: 88 }, // Pecharunt
+  // Therian Formes (PokeAPI IDs)
+  "10019": { hp: 79, atk: 100, def: 80, spa: 110, spd: 90, spe: 121 }, // Tornadus-Therian (Regenerator — faster + SpA)
+  "10020": { hp: 79, atk: 105, def: 70, spa: 145, spd: 80, spe: 101 }, // Thundurus-Therian (Volt Absorb — highest SpA of Genies)
+  "10026": { hp: 89, atk: 145, def: 90, spa: 105, spd: 80, spe: 91 }, // Landorus-Therian (Intimidate — best Atk of Genies)
+// rotom 
+  "10008": { hp: 50, atk: 65, def: 107, spa: 105, spd: 107, spe: 86 }, // Rotom Heat
+  "10009": { hp: 50, atk: 65, def: 107, spa: 105, spd: 107, spe: 86 }, // Rotom Wash
+  "10010": { hp: 50, atk: 65, def: 107, spa: 105, spd: 107, spe: 86 }, // Rotom Frost
+  "10011": { hp: 50, atk: 65, def: 107, spa: 105, spd: 107, spe: 86 }, // Rotom Fan
+  "10012": { hp: 50, atk: 65, def: 107, spa: 105, spd: 107, spe: 86 }, // Rotom Mow
+  
+  // --- ALOLAN FORMS ---
+  "10091": { hp: 35, atk: 56, def: 35, spa: 25, spd: 35, spe: 72 }, // Alolan Rattata
+  "10092": { hp: 75, atk: 71, def: 70, spa: 40, spd: 80, spe: 77 }, // Alolan Raticate
+  "10093": { hp: 60, atk: 85, def: 50, spa: 95, spd: 85, spe: 110 }, // Alolan Raichu
+  "10094": { hp: 50, atk: 30, def: 50, spa: 20, spd: 35, spe: 40 }, // Alolan Sandshrew
+  "10095": { hp: 75, atk: 100, def: 120, spa: 25, spd: 65, spe: 65 }, // Alolan Sandslash
+  "10096": { hp: 38, atk: 41, def: 40, spa: 50, spd: 65, spe: 65 }, // Alolan Vulpix
+  "10097": { hp: 73, atk: 67, def: 75, spa: 81, spd: 100, spe: 109 }, // Alolan Ninetales
+  "10098": { hp: 10, atk: 55, def: 30, spa: 30, spd: 30, spe: 15 }, // Alolan Diglett
+  "10099": { hp: 35, atk: 100, def: 60, spa: 50, spd: 70, spe: 25 }, // Alolan Dugtrio
+  "10100": { hp: 40, atk: 35, def: 35, spa: 50, spd: 40, spe: 90 }, // Alolan Meowth
+  "10101": { hp: 65, atk: 60, def: 60, spa: 75, spd: 65, spe: 115 }, // Alolan Persian
+  "10102": { hp: 40, atk: 80, def: 100, spa: 30, spd: 30, spe: 20 }, // Alolan Geodude
+  "10103": { hp: 55, atk: 95, def: 115, spa: 40, spd: 45, spe: 35 }, // Alolan Graveler
+  "10104": { hp: 80, atk: 120, def: 130, spa: 55, spd: 65, spe: 45 }, // Alolan Golem
+  "10105": { hp: 80, atk: 80, def: 50, spa: 40, spd: 50, spe: 25 }, // Alolan Grimer
+  "10106": { hp: 105, atk: 105, def: 75, spa: 60, spd: 100, spe: 50 }, // Alolan Muk
+  "10107": { hp: 95, atk: 70, def: 75, spa: 125, spd: 85, spe: 45 }, // Alolan Exeggutor
+  "10108": { hp: 60, atk: 80, def: 110, spa: 50, spd: 80, spe: 45 }, // Alolan Marowak
+
+  // --- GALARIAN FORMS ---
+  "10161": { hp: 45, atk: 85, def: 50, spa: 55, spd: 65, spe: 90 }, // Galarian Ponyta
+  "10162": { hp: 65, atk: 100, def: 70, spa: 80, spd: 80, spe: 105 }, // Galarian Rapidash
+  "10163": { hp: 65, atk: 100, def: 70, spa: 80, spd: 80, spe: 105 }, // Galarian Rapidash (alt ID)
+  "10164": { hp: 95, atk: 75, def: 110, spa: 100, spd: 80, spe: 30 }, // Galarian Slowpoke
+  "10165": { hp: 95, atk: 100, def: 95, spa: 100, spd: 70, spe: 30 }, // Galarian Slowbro
+  "10166": { hp: 52, atk: 85, def: 55, spa: 15, spd: 65, spe: 30 }, // Galarian Farfetch'd
+  "10167": { hp: 105, atk: 75, def: 70, spa: 110, spd: 70, spe: 60 }, // Galarian Weezing
+  "10168": { hp: 60, atk: 45, def: 80, spa: 90, spd: 140, spe: 70 }, // Galarian Mr. Mime
+  "10169": { hp: 80, atk: 85, def: 50, spa: 125, spd: 160, spe: 95 }, // Galarian Articuno
+  "10170": { hp: 90, atk: 125, def: 70, spa: 85, spd: 95, spe: 135 }, // Galarian Zapdos
+  "10171": { hp: 90, atk: 85, def: 90, spa: 125, spd: 100, spe: 90 }, // Galarian Moltres
+  "10172": { hp: 95, atk: 75, def: 80, spa: 110, spd: 125, spe: 30 }, // Galarian Slowking
+  "10173": { hp: 38, atk: 55, def: 90, spa: 95, spd: 55, spe: 30 }, // Galarian Yamask
+  "10174": { hp: 50, atk: 90, def: 62, spa: 50, spd: 62, spe: 32 }, // Galarian Stunfisk
+
+  // --- HISUIAN FORMS ---
+  "10175": { hp: 60, atk: 85, def: 80, spa: 55, spd: 65, spe: 60 }, // Hisuian Growlithe
+  "10176": { hp: 90, atk: 115, def: 80, spa: 95, spd: 80, spe: 85 }, // Hisuian Arcanine
+  "10177": { hp: 90, atk: 115, def: 80, spa: 95, spd: 80, spe: 85 }, // Hisuian Arcanine (alt)
+  "10178": { hp: 65, atk: 84, def: 78, spa: 109, spd: 75, spe: 90 }, // Hisuian Typhlosion
+  "10179": { hp: 65, atk: 95, def: 95, spa: 55, spd: 45, spe: 55 }, // Hisuian Qwilfish
+  "10229": { hp: 60, atk: 85, def: 80, spa: 55, spd: 65, spe: 60 }, // Hisuian Growlithe (alt ID)
+  "10230": { hp: 90, atk: 115, def: 80, spa: 95, spd: 80, spe: 85 }, // Hisuian Arcanine (alt ID)
+  "10231": { hp: 40, atk: 65, def: 85, spa: 80, spd: 55, spe: 100 }, // Hisuian Voltorb
+  "10232": { hp: 60, atk: 80, def: 95, spa: 80, spd: 80, spe: 115 }, // Hisuian Electrode
+  "10233": { hp: 65, atk: 84, def: 78, spa: 109, spd: 75, spe: 90 }, // Hisuian Typhlosion (alt)
+  "10234": { hp: 65, atk: 95, def: 95, spa: 55, spd: 45, spe: 55 }, // Hisuian Qwilfish (alt)
+  "10235": { hp: 35, atk: 60, def: 40, spa: 30, spd: 40, spe: 60 }, // Hisuian Sneasel
+  "10236": { hp: 58, atk: 108, def: 63, spa: 62, spd: 63, spe: 85 }, // Hisuian Samurott
+  "10237": { hp: 75, atk: 110, def: 60, spa: 85, spd: 60, spe: 105 }, // Hisuian Lilligant
+  "10238": { hp: 40, atk: 65, def: 60, spa: 80, spd: 60, spe: 90 }, // Hisuian Zorua
+  "10239": { hp: 60, atk: 100, def: 60, spa: 125, spd: 60, spe: 110 }, // Hisuian Zoroark
+  "10240": { hp: 85, atk: 90, def: 80, spa: 110, spd: 70, spe: 85 }, // Hisuian Braviary
+  "10241": { hp: 68, atk: 70, def: 65, spa: 70, spd: 55, spe: 30 }, // Hisuian Sliggoo
+  "10242": { hp: 113, atk: 100, def: 120, spa: 135, spd: 65, spe: 42 }, // Bloodmoon Ursaluna / Hisuian Goodra base
+  "10243": { hp: 95, atk: 80, def: 246, spa: 95, spd: 70, spe: 10 }, // Hisuian Avalugg
+  "10244": { hp: 78, atk: 112, def: 71, spa: 68, spd: 71, spe: 110 }, // Hisuian Decidueye
+
+  // --- PALDEAN FORMS ---
+  "10250": { hp: 75, atk: 110, def: 105, spa: 30, spd: 85, spe: 75 }, // Paldean Tauros (Combat)
+  "10251": { hp: 75, atk: 110, def: 105, spa: 30, spd: 85, spe: 75 }, // Paldean Tauros (Blaze)
+  "10252": { hp: 75, atk: 110, def: 105, spa: 30, spd: 85, spe: 75 },  // Paldean Tauros (Aqua)
+
+
+  // Mega Forms (PokeAPI IDs)
+  "10033": { hp: 80, atk: 100, def: 123, spa: 122, spd: 120, spe: 80 }, // Mega Venusaur
+  "10034": { hp: 78, atk: 130, def: 111, spa: 130, spd: 85, spe: 100 }, // Mega Charizard X
+  "10035": { hp: 78, atk: 104, def: 78, spa: 159, spd: 115, spe: 100 }, // Mega Charizard Y
+  "10036": { hp: 79, atk: 103, def: 120, spa: 135, spd: 115, spe: 78 }, // Mega Blastoise
+  "10037": { hp: 55, atk: 50, def: 65, spa: 175, spd: 95, spe: 150 }, // Mega Alakazam
+  "10038": { hp: 60, atk: 65, def: 80, spa: 170, spd: 95, spe: 130 }, // Mega Gengar
+  "10039": { hp: 105, atk: 125, def: 100, spa: 60, spd: 100, spe: 100 }, // Mega Kangaskhan
+  "10040": { hp: 65, atk: 155, def: 120, spa: 65, spd: 90, spe: 105 }, // Mega Pinsir
+  "10041": { hp: 95, atk: 155, def: 109, spa: 70, spd: 130, spe: 81 }, // Mega Gyarados
+  "10042": { hp: 80, atk: 135, def: 85, spa: 70, spd: 95, spe: 150 }, // Mega Aerodactyl
+  "10043": { hp: 106, atk: 190, def: 100, spa: 154, spd: 100, spe: 130 }, // Mega Mewtwo X
+  "10044": { hp: 106, atk: 150, def: 70, spa: 194, spd: 120, spe: 140 }, // Mega Mewtwo Y
+  "10045": { hp: 90, atk: 95, def: 105, spa: 165, spd: 110, spe: 45 }, // Mega Ampharos
+  "10046": { hp: 70, atk: 150, def: 140, spa: 65, spd: 100, spe: 75 }, // Mega Scizor
+  "10047": { hp: 80, atk: 185, def: 115, spa: 40, spd: 105, spe: 75 }, // Mega Heracross
+  "10048": { hp: 75, atk: 90, def: 90, spa: 140, spd: 90, spe: 115 }, // Mega Houndoom
+  "10049": { hp: 100, atk: 164, def: 150, spa: 95, spd: 120, spe: 71 }, // Mega Tyranitar
+  "10050": { hp: 80, atk: 160, def: 80, spa: 130, spd: 80, spe: 100 }, // Mega Blaziken
+  "10051": { hp: 68, atk: 85, def: 65, spa: 165, spd: 135, spe: 100 }, // Mega Gardevoir
+  "10052": { hp: 50, atk: 105, def: 125, spa: 55, spd: 95, spe: 50 }, // Mega Mawile
+  "10053": { hp: 70, atk: 140, def: 230, spa: 60, spd: 80, spe: 50 }, // Mega Aggron
+  "10054": { hp: 60, atk: 100, def: 85, spa: 80, spd: 85, spe: 100 }, // Mega Medicham
+  "10055": { hp: 70, atk: 75, def: 80, spa: 135, spd: 80, spe: 135 }, // Mega Manectric
+  "10056": { hp: 64, atk: 165, def: 75, spa: 93, spd: 83, spe: 75 }, // Mega Banette
+  "10057": { hp: 65, atk: 150, def: 60, spa: 115, spd: 60, spe: 115 }, // Mega Absol
+  "10058": { hp: 108, atk: 170, def: 115, spa: 120, spd: 95, spe: 92 }, // Mega Garchomp
+  "10059": { hp: 70, atk: 145, def: 88, spa: 140, spd: 70, spe: 112 }, // Mega Lucario
+  "10060": { hp: 90, atk: 132, def: 105, spa: 132, spd: 105, spe: 30 }, // Mega Abomasnow
+  "10061": { hp: 65, atk: 150, def: 40, spa: 15, spd: 80, spe: 145 }, // Mega Beedrill
+  "10062": { hp: 83, atk: 80, def: 80, spa: 135, spd: 80, spe: 121 }, // Mega Pidgeot
+  "10063": { hp: 95, atk: 75, def: 180, spa: 130, spd: 80, spe: 30 }, // Mega Slowbro
+  "10064": { hp: 75, atk: 125, def: 230, spa: 55, spd: 95, spe: 30 }, // Mega Steelix
+  "10065": { hp: 70, atk: 110, def: 75, spa: 145, spd: 85, spe: 145 }, // Mega Sceptile
+  "10066": { hp: 100, atk: 150, def: 110, spa: 95, spd: 110, spe: 70 }, // Mega Swampert
+  "10067": { hp: 50, atk: 85, def: 125, spa: 85, spd: 115, spe: 20 }, // Mega Sableye
+  "10068": { hp: 70, atk: 140, def: 70, spa: 110, spd: 65, spe: 105 }, // Mega Sharpedo
+  "10069": { hp: 70, atk: 120, def: 100, spa: 145, spd: 105, spe: 20 }, // Mega Camerupt
+  "10070": { hp: 75, atk: 110, def: 110, spa: 110, spd: 105, spe: 80 }, // Mega Altaria
+  "10071": { hp: 80, atk: 120, def: 80, spa: 120, spd: 80, spe: 100 }, // Mega Glalie
+  "10072": { hp: 95, atk: 145, def: 130, spa: 120, spd: 90, spe: 120 }, // Mega Salamence
+  "10073": { hp: 80, atk: 145, def: 150, spa: 105, spd: 110, spe: 110 }, // Mega Metagross
+  "10074": { hp: 80, atk: 100, def: 120, spa: 140, spd: 150, spe: 110 }, // Mega Latias
+  "10075": { hp: 80, atk: 130, def: 100, spa: 160, spd: 120, spe: 110 }, // Mega Latios
+  "10076": { hp: 105, atk: 180, def: 100, spa: 180, spd: 100, spe: 115 }, // Mega Rayquaza
+  "10077": { hp: 65, atk: 136, def: 94, spa: 54, spd: 96, spe: 135 }, // Mega Lopunny
+  "10078": { hp: 68, atk: 165, def: 95, spa: 65, spd: 115, spe: 110 }, // Mega Gallade
+  "10079": { hp: 103, atk: 60, def: 126, spa: 80, spd: 126, spe: 50 }, // Mega Audino
+  "10080": { hp: 50, atk: 160, def: 110, spa: 160, spd: 110, spe: 110 },  // Mega Diancie
+
+  // --- SPECIAL FORMS & ALTERNATE FORMS ---
+  "10001": { hp: 50, atk: 180, def: 20, spa: 180, spd: 20, spe: 150 }, // Deoxys-Attack
+  "10002": { hp: 50, atk: 70, def: 160, spa: 70, spd: 160, spe: 90 }, // Deoxys-Defense
+  "10003": { hp: 50, atk: 95, def: 90, spa: 95, spd: 90, spe: 180 }, // Deoxys-Speed
+  "10004": { hp: 60, atk: 78, def: 112, spa: 78, spd: 112, spe: 36 }, // Wormadam-Sandy
+  "10005": { hp: 60, atk: 69, def: 135, spa: 79, spd: 105, spe: 36 }, // Wormadam-Trash
+  "10007": { hp: 150, atk: 120, def: 100, spa: 120, spd: 100, spe: 90 }, // Giratina-Origin
+  "10022": { hp: 125, atk: 170, def: 100, spa: 120, spd: 90, spe: 95 }, // Kyurem-White
+  "10023": { hp: 125, atk: 170, def: 100, spa: 120, spd: 90, spe: 95 }, // Kyurem-Black
+  "10027": { hp: 100, atk: 103, def: 75, spa: 120, spd: 75, spe: 127 }, // Shaymin-Sky
+  "10077": { hp: 100, atk: 180, def: 160, spa: 160, spd: 90, spe: 90 }, // Primal Kyogre
+  "10078": { hp: 100, atk: 180, def: 160, spa: 150, spd: 90, spe: 90 }, // Primal Groudon
+  "10086": { hp: 80, atk: 160, def: 60, spa: 170, spd: 130, spe: 80 }, // Hoopa-Unbound
+  "10118": { hp: 108, atk: 100, def: 121, spa: 81, spd: 95, spe: 95 }, // Zygarde-10%
+  "10120": { hp: 216, atk: 100, def: 121, spa: 91, spd: 95, spe: 85 }, // Zygarde-Complete
+  "10123": { hp: 75, atk: 70, def: 70, spa: 98, spd: 70, spe: 113 }, // Oricorio-Pom-Pom
+  "10124": { hp: 75, atk: 70, def: 70, spa: 98, spd: 70, spe: 113 }, // Oricorio-Pa'u
+  "10125": { hp: 75, atk: 70, def: 70, spa: 98, spd: 70, spe: 113 }, // Oricorio-Sensu
+  "10126": { hp: 75, atk: 115, def: 65, spa: 55, spd: 65, spe: 112 }, // Lycanroc-Midnight
+  "10127": { hp: 175, atk: 140, def: 130, spa: 140, spd: 130, spe: 20 }, // Wishiwashi-School
+  "10152": { hp: 75, atk: 115, def: 65, spa: 55, spd: 65, spe: 112 }, // Lycanroc-Dusk
+  "10155": { hp: 97, atk: 157, def: 127, spa: 113, spd: 109, spe: 77 }, // Necrozma-Dusk Mane
+  "10156": { hp: 97, atk: 113, def: 109, spa: 157, spd: 127, spe: 77 }, // Necrozma-Dawn Wings
+  "10157": { hp: 97, atk: 167, def: 97, spa: 167, spd: 97, spe: 129 }, // Necrozma-Ultra
+  "10184": { hp: 75, atk: 98, def: 70, spa: 114, spd: 70, spe: 75 }, // Toxtricity-Low Key
+  "10188": { hp: 92, atk: 170, def: 115, spa: 80, spd: 115, spe: 148 }, // Zacian-Crowned
+  "10189": { hp: 92, atk: 120, def: 145, spa: 80, spd: 145, spe: 128 }, // Zamazenta-Crowned
+  "10191": { hp: 100, atk: 130, def: 100, spa: 63, spd: 60, spe: 97 }, // Urshifu-Rapid Strike
+  "10193": { hp: 100, atk: 165, def: 170, spa: 85, spd: 105, spe: 50 }, // Calyrex-Ice
+  "10194": { hp: 100, atk: 85, def: 80, spa: 165, spd: 100, spe: 150 }, // Calyrex-Shadow
+  "10228": { hp: 74, atk: 60, def: 120, spa: 135, spd: 100, spe: 66 }, // Enamorus-Therian
+  "10273": { hp: 106, atk: 120, def: 94, spa: 60, spd: 96, spe: 100 }, // Ogerpon-Wellspring
+  "10274": { hp: 106, atk: 120, def: 84, spa: 60, spd: 96, spe: 110 }, // Ogerpon-Hearthflame
+  "10275": { hp: 106, atk: 120, def: 104, spa: 60, spd: 96, spe: 90 } // Ogerpon-Cornerstone
+
 };
